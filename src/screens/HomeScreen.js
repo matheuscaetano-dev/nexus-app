@@ -1,6 +1,11 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-export default function HomeScreen() {
+// --------------------------------------------------
+// TELA 1: HOME (Previsão de Conexão)
+// --------------------------------------------------
+function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -21,13 +26,111 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Selecionar outro horário</Text>
+      <TouchableOpacity 
+        style={styles.buttonPrimary} 
+        onPress={() => navigation.navigate('Atividades')}
+      >
+        <Text style={styles.buttonText}>Planejar uma atividade</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={styles.buttonSecondary} 
+        onPress={() => navigation.navigate('Detalhes')}
+      >
+        <Text style={styles.buttonTextSecondary}>Entenda esta previsão</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
+// --------------------------------------------------
+// TELA 2: DETALHES (Glossário e Dados Técnicos)
+// --------------------------------------------------
+function DetalhesScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Sobre esta previsão</Text>
+      <Text style={styles.subtitle}>O que os dados significam de forma simples:</Text>
+      
+      <View style={styles.card}>
+        <Text style={styles.statusText}>Latência prevista: 49,1 ms</Text>
+        <Text style={styles.suggestionText}>
+          O tempo necessário para os dados percorrerem a rede. Valores altos podem deixar chamadas lentas.
+        </Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.statusText}>Perda prevista: 2,1%</Text>
+        <Text style={styles.suggestionText}>
+          Proporção estimada de pacotes de dados que não chegam ao destino, causando cortes em vídeos e áudios.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// --------------------------------------------------
+// TELA 3: ATIVIDADES (Impacto da Conexão)
+// --------------------------------------------------
+function AtividadesScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>O que você pretende fazer?</Text>
+      <Text style={styles.subtitle}>Saiba como a conexão atual afeta seu uso.</Text>
+      
+      <View style={styles.activityCard}>
+        <Text style={styles.statusText}>🎥 Chamada de vídeo</Text>
+        <Text style={styles.suggestionText}>Pode apresentar dificuldades e oscilações neste período.</Text>
+      </View>
+
+      <View style={styles.activityCard}>
+        <Text style={styles.statusText}>🌐 Navegar na web</Text>
+        <Text style={styles.suggestionText}>Ideal. A conexão atual suporta carregamento de páginas sem problemas.</Text>
+      </View>
+    </View>
+  );
+}
+
+// --------------------------------------------------
+// CONFIGURAÇÃO DE ROTAS
+// --------------------------------------------------
+const Stack = createNativeStackNavigator();
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator 
+        initialRouteName="Home"
+        screenOptions={{
+          headerStyle: { backgroundColor: '#FFFFFF' },
+          headerTintColor: '#0056D2',
+          headerTitleStyle: { fontWeight: 'bold' },
+          headerShadowVisible: false,
+        }}
+      >
+        <Stack.Screen 
+          name="Home" 
+          component={HomeScreen} 
+          options={{ title: 'Início' }} 
+        />
+        <Stack.Screen 
+          name="Detalhes" 
+          component={DetalhesScreen} 
+          options={{ title: 'Detalhes Técnicos' }} 
+        />
+        <Stack.Screen 
+          name="Atividades" 
+          component={AtividadesScreen} 
+          options={{ title: 'Testar Atividades' }} 
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+// --------------------------------------------------
+// ESTILOS GERAIS Acessíveis (Contraste > 4.5:1)
+// --------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -36,13 +139,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   header: {
-    marginBottom: 32, // Espaço entre o logo e o título
+    marginBottom: 32,
   },
   appName: {
     fontSize: 22,
-    fontWeight: '900', // Fonte bem grossa pra destacar
-    color: '#0056D2', // Azul do botão, mantendo um bom contraste
-    letterSpacing: 3, // Espaçamento entre as letras pra dar estilo de logo
+    fontWeight: '900',
+    color: '#0056D2',
+    letterSpacing: 3,
   },
   title: {
     fontSize: 28,
@@ -64,6 +167,14 @@ const styles = StyleSheet.create({
     borderLeftColor: '#F5A623',
     marginBottom: 32,
   },
+  activityCard: {
+    backgroundColor: '#F5F5F5',
+    padding: 20,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderLeftWidth: 6,
+    borderLeftColor: '#0056D2',
+  },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -81,14 +192,28 @@ const styles = StyleSheet.create({
     color: '#333333',
     lineHeight: 22,
   },
-  button: {
+  buttonPrimary: {
     backgroundColor: '#0056D2',
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
+    marginBottom: 16,
+  },
+  buttonSecondary: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#0056D2',
   },
   buttonText: {
     color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonTextSecondary: {
+    color: '#0056D2',
     fontSize: 18,
     fontWeight: 'bold',
   },
