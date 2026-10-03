@@ -1,24 +1,36 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
+import { cores, raio, AREA_MINIMA, fonte } from '../theme';
 
-export default function BotaoPrincipal({ titulo, onPress }) {
+export default function BotaoPrincipal({ titulo, onPress, variante = 'primario', desabilitado, dica }) {
+  const secundario = variante === 'secundario';
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
-      <Text style={styles.text}>{titulo}</Text>
-    </TouchableOpacity>
+    <Pressable
+      onPress={onPress}
+      disabled={desabilitado}
+      accessibilityRole="button"
+      accessibilityLabel={titulo}
+      accessibilityHint={dica}
+      accessibilityState={{ disabled: !!desabilitado }}
+      style={({ pressed }) => [
+        estilos.botao,
+        secundario ? estilos.secundario : estilos.primario,
+        desabilitado && estilos.desabilitado,
+        pressed && { opacity: 0.85 },
+      ]}
+    >
+      <Text style={[estilos.texto, { color: secundario ? cores.primaria : cores.sobrePrimaria }]}>{titulo}</Text>
+    </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#0056D2',
-    paddingVertical: 16, // Garante a área de toque acessível
-    borderRadius: 8,
-    alignItems: 'center',
+const estilos = StyleSheet.create({
+  botao: {
+    minHeight: AREA_MINIMA + 4, borderRadius: raio.md, paddingVertical: 14, paddingHorizontal: 20,
+    alignItems: 'center', justifyContent: 'center',
   },
-  text: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-  }
+  primario: { backgroundColor: cores.primaria },
+  secundario: { backgroundColor: cores.superficie, borderWidth: 2, borderColor: cores.primaria },
+  desabilitado: { opacity: 0.5 },
+  texto: { fontSize: fonte.corpo + 1, fontWeight: '700', textAlign: 'center' },
 });
