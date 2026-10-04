@@ -7,6 +7,7 @@ import PrevisaoScreen from '../screens/PrevisaoScreen';
 import PlanejarScreen from '../screens/PlanejarScreen';
 import EntendaScreen from '../screens/EntendaScreen';
 import ResultadoScreen from '../screens/ResultadoScreen';
+import BoasVindasScreen from '../screens/BoasVindasScreen';
 import { cores } from '../theme';
 
 const Stack = createNativeStackNavigator();
@@ -36,6 +37,7 @@ export default function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
+        initialRouteName="BoasVindas"
         screenOptions={{
           headerStyle: { backgroundColor: cores.superficie },
           headerTintColor: cores.primaria,
@@ -44,6 +46,7 @@ export default function AppNavigator() {
           contentStyle: { backgroundColor: cores.fundo },
         }}
       >
+        <Stack.Screen name="BoasVindas" component={BoasVindasScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Abas" component={Abas} options={{ headerShown: false }} />
         <Stack.Screen name="Resultado" component={ResultadoScreen} options={{ title: 'Resultado', headerBackTitle: 'Voltar' }} />
       </Stack.Navigator>
