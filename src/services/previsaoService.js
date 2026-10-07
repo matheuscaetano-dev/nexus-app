@@ -1,60 +1,113 @@
 import { USAR_MOCK } from '../config';
-import { ErroApi, get } from './api';
-import { previsaoMock } from './mock';
+import { ErroApi, get, post } from './api';
+import { atividadeMock, locaisMock, modelosMock, previsaoMock } from './mock';
 import { normalizarQualidade } from '../domain/qualidade';
 
-const respostaInvalida = (mensagem) => {
-  throw new ErroApi(mensagem, 'resposta');
-};
+const invalidar = (mensagem) => { throw new ErroApi(mensagem, 'resposta'); };
 
-// ÚNICO lugar que conhece o formato da API. Se o contrato mudar, ajuste só aqui.
-// Contrato esperado (confirme com o grupo de Estrutura de Dados):
-//   GET {API_URL}/api/previsao?horario=<ISO 8601>
-//   -> { modeloUsado, qualidade, latencia (ms), perdaPacotes (%), distanciaProbe (km) }
-function paraModeloDoApp(bruto, dataHora) {
-  if (!bruto || typeof bruto !== 'object' || Array.isArray(bruto)) {
-    respostaInvalida('A API retornou uma previsão em formato inválido.');
-  }
-  if (typeof bruto.qualidade !== 'string' || !bruto.qualidade.trim()) {
-    respostaInvalida('A resposta da API não contém uma qualidade de conexão válida.');
-  }
+function validarLista(resposta, chave, nome) {
+  if (!resposta || !Array.isArray(resposta[chave])) invalidar(`A API retornou uma lista de ${nome} inválida.`);
+  return resposta[chave];
+}
 
-  const latenciaMs = bruto.latencia ?? bruto.latenciaMs;
-  const perdaPercentual = bruto.perdaPacotes ?? bruto.perda;
-  const distancia = bruto.distanciaProbe;
-  if (typeof latenciaMs !== 'number' || !Number.isFinite(latenciaMs) || latenciaMs < 0) {
-    respostaInvalida('A resposta da API contém uma latência inválida.');
+function mapearPrevisao(resposta, dataHora) {
+  const prediction = resposta?.prediction;
+  const quality = resposta?.assessment?.quality ?? prediction?.quality;
+  const latenciaMs = prediction?.predictedAvgRttMs;
+  const perdaPercentual = prediction?.predictedPacketLossPct;
+  if (typeof latenciaMs !== 'number' || !Number.isFinite(latenciaMs) || typeof perdaPercentual !== 'number' || !Number.isFinite(perdaPercentual)) {
+    invalidar('A resposta da API não contém RTT e perda de pacotes válidos.');
   }
-  if (typeof perdaPercentual !== 'number' || !Number.isFinite(perdaPercentual) || perdaPercentual < 0 || perdaPercentual > 100) {
-    respostaInvalida('A resposta da API contém um percentual de perda inválido.');
-  }
-  if (distancia != null && (typeof distancia !== 'number' || !Number.isFinite(distancia) || distancia < 0)) {
-    respostaInvalida('A resposta da API contém uma distância inválida.');
-  }
-
   let nivel;
-  try {
-    nivel = normalizarQualidade(bruto.qualidade);
-  } catch {
-    respostaInvalida('A resposta da API contém uma qualidade não reconhecida.');
-  }
-
+  try { nivel = normalizarQualidade(quality); } catch { invalidar('A API retornou uma qualidade que o app não reconhece.'); }
+  const previsao = resposta.prediction || {};
+  const probe = resposta.matchedProbe || {};
+  const modelo = resposta.model || {};
   return {
-    dataHora,
-    modelo: bruto.modeloUsado ?? bruto.modelo ?? null,
+    dataHora: previsao.predictionFor ? new Date(previsao.predictionFor) : dataHora,
+    modelo: modelo.name || modelo.id || null,
+    modeloId: modelo.id || null,
+    probeId: probe.probeId ?? resposta.probeId ?? null,
     nivel,
     latenciaMs,
     perdaPercentual,
-    distanciaProbeKm: distancia ?? null,
+    distanciaProbeKm: probe.distanceKm ?? null,
+    confianca: previsao.modelConfidence ?? null,
+    recomendacao: resposta.recommendation?.message || null,
   };
 }
 
-export async function obterPrevisao(dataHora) {
-  const iso = dataHora.toISOString();
-  const bruto = USAR_MOCK ? await previsaoMock(iso) : await get('/api/previsao', { horario: iso });
-  return paraModeloDoApp(bruto, dataHora);
+export async function listarModelos() {
+  if (USAR_MOCK) return modelosMock;
+  return validarLista(await get('/api/v1/models'), 'items', 'modelos');
 }
 
-export function obterProximasHoras(base, deslocamentosEmHoras) {
-  return Promise.all(deslocamentosEmHoras.map((h) => obterPrevisao(new Date(base.getTime() + h * 3600000))));
+export async function listarLocais() {
+  if (USAR_MOCK) return locaisMock;
+  return validarLista(await get('/api/v1/locations'), 'items', 'localidades');
+}
+
+export async function obterPrevisao(dataHora, local, modelo) {
+  if (!local?.location || !modelo?.id) throw new ErroApi('Escolha um modelo e uma localização aproximada antes de consultar.', 'configuracao');
+  if (USAR_MOCK) {
+    const bruto = await previsaoMock(dataHora.toISOString());
+    return mapearPrevisao({
+      model: { id: modelo.id, name: modelo.name, version: modelo.version },
+      requestedLocation: local.location,
+      matchedProbe: { probeId: local.probeId, distanceKm: 2.7 },
+      prediction: { predictionFor: dataHora.toISOString(), predictedAvgRttMs: bruto.latencia, predictedPacketLossPct: bruto.perdaPacotes },
+      assessment: { quality: bruto.qualidade === 'Boa' ? 'GOOD' : bruto.qualidade === 'Moderada' ? 'MODERATE' : 'UNSTABLE', qualityScore: 68 },
+    }, dataHora);
+  }
+  const bruto = await get('/api/v1/forecasts/nearby', {
+    lat: local.location.latitude,
+    lon: local.location.longitude,
+    model_id: modelo.id,
+  });
+  return mapearPrevisao(bruto, dataHora);
+}
+
+export function obterProximasHoras(base, deslocamentosEmHoras, local, modelo) {
+  return Promise.all(deslocamentosEmHoras.map((h) => obterPrevisao(new Date(base.getTime() + h * 3600000), local, modelo)));
+}
+
+export async function obterLinhaDoTempo(local, modelo, inicio, fim, limite = 24) {
+  if (USAR_MOCK) return obterProximasHoras(inicio, Array.from({ length: Math.min(limite, 24) }, (_, i) => i), local, modelo);
+  const atual = await obterPrevisao(inicio, local, modelo);
+  const resposta = await get(`/api/v1/forecasts/probes/${atual.probeId}/timeline`, {
+    model_id: modelo.id,
+    from: inicio.toISOString(),
+    to: fim.toISOString(),
+    limit: limite,
+  });
+  if (!Array.isArray(resposta?.items)) invalidar('A API retornou uma linha do tempo inválida.');
+  return resposta.items.map((item) => mapearPrevisao({
+    model: resposta.model,
+    probeId: resposta.probeId,
+    prediction: { predictionFor: item.predictionFor, predictedAvgRttMs: item.predictedAvgRttMs, predictedPacketLossPct: item.predictedPacketLossPct },
+    assessment: { quality: item.quality, qualityScore: item.qualityScore },
+  }, new Date(item.predictionFor)));
+}
+
+export async function verificarAtividade({ local, modelo, dataHora, atividade }) {
+  if (!local?.location || !modelo?.id) throw new ErroApi('Escolha um modelo e uma localização aproximada antes de planejar.', 'configuracao');
+  const corpo = {
+    modelId: modelo.id,
+    latitude: local.location.latitude,
+    longitude: local.location.longitude,
+    dateTime: dataHora.toISOString(),
+    activity: atividade,
+  };
+  const resposta = USAR_MOCK ? await atividadeMock(corpo) : await post('/api/v1/activity/check', corpo);
+  const forecast = resposta?.forecast;
+  if (typeof resposta?.suitable !== 'boolean' || !forecast) invalidar('A API retornou uma avaliação de atividade inválida.');
+  return {
+    ...resposta,
+    previsao: mapearPrevisao({
+      model: resposta.model,
+      prediction: { predictedAvgRttMs: forecast.predictedAvgRttMs, predictedPacketLossPct: forecast.predictedPacketLossPct },
+      assessment: { quality: forecast.quality },
+      recommendation: resposta.recommendation,
+    }, dataHora),
+  };
 }

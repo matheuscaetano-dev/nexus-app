@@ -1,11 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { ViewAcessivel as View, TextoAcessivel as Text } from '../context/AcessibilidadeContext';
 import { cores, raio, espaco, fonte } from '../theme';
 
-export default function Cartao({ titulo, children, style }) {
+export default function Cartao({ titulo, children, variante = 'padrao', style }) {
+  const isDestaque = variante === 'destaque';
+  
   return (
-    <View style={[estilos.cartao, style]}>
-      {titulo ? <Text accessibilityRole="header" style={estilos.titulo}>{titulo}</Text> : null}
+    <View style={[estilos.cartao, isDestaque && estilos.cartaoDestaque, style]}>
+      {titulo ? (
+        <Text accessibilityRole="header" style={[estilos.titulo, isDestaque && estilos.tituloDestaque]}>
+          {titulo}
+        </Text>
+      ) : null}
       {children}
     </View>
   );
@@ -13,8 +20,23 @@ export default function Cartao({ titulo, children, style }) {
 
 const estilos = StyleSheet.create({
   cartao: {
-    backgroundColor: cores.superficie, borderRadius: raio.lg, padding: espaco.lg,
-    gap: espaco.md, borderWidth: 1, borderColor: cores.divisor,
+    backgroundColor: cores.superficie,
+    borderRadius: raio.xl,
+    padding: espaco.lg,
+    gap: espaco.md,
+    borderWidth: 1,
+    borderColor: cores.divisor,
   },
-  titulo: { fontSize: fonte.subtitulo, fontWeight: '700', color: cores.texto },
+  cartaoDestaque: {
+    backgroundColor: cores.primaria,
+    borderColor: cores.primaria,
+  },
+  titulo: {
+    fontSize: fonte.subtitulo,
+    fontWeight: '800',
+    color: cores.texto
+  },
+  tituloDestaque: {
+    color: cores.sobrePrimaria,
+  }
 });

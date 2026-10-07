@@ -1,51 +1,52 @@
-# Contrato entre o app Nexus e a API
+# Contrato entre o app Nexus e a Internet Quality API
 
-O app Expo é o front-end. A API deve ser executada e implantada como um serviço
-independente; não coloque lógica que dependa de segredos ou do modelo de previsão
-dentro do aplicativo.
+O app usa a API educacional hospedada em `https://internet-quality-api.onrender.com`.
+Ela consulta previsões já calculadas; não executa os modelos nem consulta o RIPE
+Atlas em tempo real. As classificações GOOD / MODERATE / UNSTABLE e as recomendações
+são regras experimentais do protótipo.
 
-## Configuração do front-end
+## Configuração
 
-Copie `.env.example` para `.env` e configure `EXPO_PUBLIC_API_URL` com a origem
-do backend, sem incluir o caminho do endpoint. Use HTTPS fora do desenvolvimento.
-Em um aparelho físico durante o desenvolvimento, use o IP local da máquina que
-executa a API, acessível pela mesma rede.
+Copie `.env.example` para `.env`. Para usar os dados simulados, mantenha
+`EXPO_PUBLIC_USAR_MOCK=true`. Para consultar a API, use:
 
 ```dotenv
-EXPO_PUBLIC_API_URL=https://api.exemplo.com
+EXPO_PUBLIC_API_URL=https://internet-quality-api.onrender.com
 EXPO_PUBLIC_USAR_MOCK=false
 ```
 
-As variáveis `EXPO_PUBLIC_*` são públicas e incorporadas ao bundle. Nunca inclua
-senhas, tokens privados ou chaves de serviços nessas variáveis. Reinicie o Expo
-depois de alterar o `.env`.
+Reinicie o Expo depois de alterar o `.env`. Variáveis `EXPO_PUBLIC_*` são
+incorporadas ao app; nunca coloque segredos nelas.
 
-## Obter previsão
+## Fluxo do app
 
-```http
-GET /api/previsao?horario=2026-10-03T15%3A00%3A00.000Z
-Accept: application/json
-```
-
-`horario` é uma data ISO 8601 em UTC. Resposta de sucesso (`200`):
+1. `GET /api/v1/models` carrega `items`. O usuário escolhe um modelo; o app envia
+   seu `id` (`model-a`, por exemplo) como `model_id` nas consultas.
+2. `GET /api/v1/locations` carrega probes disponíveis. `probeId` identifica a
+   probe e `location.latitude` / `location.longitude` são coordenadas públicas
+   aproximadas, não a localização exata do usuário. A API não retorna IPs das probes.
+3. `GET /api/v1/forecasts/nearby?lat=...&lon=...&model_id=...` retorna a previsão
+   da probe disponível mais próxima para aquele modelo. O app lê qualidade em
+   `assessment.quality`, métricas em `prediction` e distância em `matchedProbe`.
+4. A linha do tempo usa
+   `GET /api/v1/forecasts/probes/{probe_id}/timeline?model_id=...&from=...&to=...&limit=24`.
+   `from` e `to` são instantes ISO 8601 em UTC e inclusivos.
+5. O planejamento usa `POST /api/v1/activity/check` com JSON:
 
 ```json
 {
-  "modeloUsado": "Modelo C",
-  "qualidade": "Boa",
-  "latencia": 18.4,
-  "perdaPacotes": 0.4,
-  "distanciaProbe": 46.3
+  "modelId": "model-a",
+  "latitude": -23.55,
+  "longitude": -46.63,
+  "dateTime": "2026-10-07T19:00:00Z",
+  "activity": "VIDEO_CALL"
 }
 ```
 
-- `qualidade`: nível reconhecido pelo app, como `Boa`, `Moderada` ou `Instável`.
-- `latencia`: número não negativo, em milissegundos.
-- `perdaPacotes`: número entre 0 e 100, em percentual.
-- `distanciaProbe`: número não negativo, em quilômetros; pode ser omitido ou `null`.
-- `modeloUsado`: identificador legível do modelo; pode ser omitido.
+Atividades aceitas: `VIDEO_CALL`, `AUDIO_CALL`, `STREAMING`, `FILE_UPLOAD`,
+`WEB_BROWSING` e `MESSAGING`. A resposta inclui `suitable`, `forecast` e
+`recommendation`; a decisão de adequação é uma regra de negócio da API.
 
-Use códigos HTTP de erro apropriados para falhas. O endpoint deve validar a data,
-aplicar limites de requisição e não expor dados pessoais desnecessários. Se o app
-for acessado pela web, configure CORS para as origens necessárias; CORS não
-substitui autenticação nem autorização no servidor.
+`GET /api/v1/health` pode ser usado para conferir se o serviço está ativo. Para
+Expo Web, o servidor precisa permitir a origem do app por CORS. O app não precisa
+de chave privada para os endpoints documentados.

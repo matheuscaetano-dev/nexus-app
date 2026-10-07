@@ -1,6 +1,8 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
+import { PressableAcessivel as Pressable, ScrollViewAcessivel as ScrollView, TextoAcessivel as Text, ViewAcessivel as View } from '../context/AcessibilidadeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MarcaNexus from '../components/MarcaNexus';
 import { cores, espaco, fonte, raio } from '../theme';
 
 function IlustracaoPrivacidade() {
@@ -11,8 +13,8 @@ function IlustracaoPrivacidade() {
       <View style={estilos.pontoAmarelo} />
       <View style={estilos.pontoVerde} />
       <View style={estilos.seloPrivado}>
-        <Text style={estilos.escudo} importantForAccessibility="no">♧</Text>
-        <Text style={estilos.textoPrivado}>Privado</Text>
+        <Text style={estilos.escudo} importantForAccessibility="no">✓</Text>
+        <Text style={estilos.textoPrivado}>Sem IP</Text>
       </View>
       <View style={estilos.iconeExterior}>
         <View style={estilos.iconeInterior}>
@@ -60,9 +62,9 @@ function IconeSemIp() {
 }
 
 const beneficios = [
-  { id: 'cadastro', texto: 'Sem cadastro obrigatório', Icone: IconePessoa },
-  { id: 'dados', texto: 'Sem coleta de dados pessoais', Icone: IconeCadeado },
-  { id: 'ip', texto: 'Não usa seu endereço IP', Icone: IconeSemIp },
+  { id: 'cadastro', texto: 'Sem cadastro', Icone: IconePessoa },
+  { id: 'dados', texto: 'Sem dados pessoais', Icone: IconeCadeado },
+  { id: 'ip', texto: 'Sem busca por IP', Icone: IconeSemIp },
 ];
 
 export default function BoasVindasScreen({ navigation }) {
@@ -72,17 +74,20 @@ export default function BoasVindasScreen({ navigation }) {
   return (
     <SafeAreaView style={estilos.safe}>
       <View style={estilos.container}>
-        <ScrollView contentContainerStyle={[estilos.conteudo, compacto && estilos.conteudoCompacto]}
+        <ScrollView style={estilos.scroll} contentContainerStyle={[estilos.conteudo, compacto && estilos.conteudoCompacto]}
           bounces={false} showsVerticalScrollIndicator={false}>
+          <View style={estilos.marcaTopo}>
+            <MarcaNexus />
+          </View>
           <IlustracaoPrivacidade />
 
           <View style={estilos.introducao}>
-            <Text style={estilos.chamada}>CHAMAR NEXUS</Text>
+            <Text style={estilos.chamada}>PREVISÃO DE CONEXÃO</Text>
             <Text accessibilityRole="header" style={[estilos.titulo, compacto && estilos.tituloCompacto]}>
-              Internet mais previsível sem usar seu IP
+              Veja uma estimativa para sua região
             </Text>
             <Text style={estilos.descricao}>
-              Com seu consentimento, usamos latitude e longitude para encontrar uma estação de referência próxima e mostrar uma estimativa de qualidade — sem medir sua conexão diretamente.
+              Escolha um modelo e uma probe pública como referência. A API usa previsões já calculadas; o resultado é regional e não mede a conexão do seu aparelho.
             </Text>
           </View>
 
@@ -97,21 +102,14 @@ export default function BoasVindasScreen({ navigation }) {
           </View>
 
           <View style={estilos.rodapeConteudo}>
-            <View style={estilos.paginacao} accessible accessibilityRole="text"
-              accessibilityLabel="Página 1 de 6">
-              {[0, 1, 2, 3, 4, 5].map((pagina) => (
-                <View key={pagina} style={[estilos.pontoPagina, pagina === 0 && estilos.paginaAtual]} />
-              ))}
-            </View>
-
             <Pressable
-              onPress={() => navigation.replace('Abas')}
+              onPress={() => navigation.replace('EscolherModelo')}
               accessibilityRole="button"
-              accessibilityLabel="Começar agora"
+              accessibilityLabel="Começar a configurar o aplicativo"
               style={({ pressed }) => [estilos.botao, pressed && estilos.botaoPressionado]}
             >
               <Text style={estilos.seta}>→</Text>
-              <Text style={estilos.textoBotao}>Começar agora</Text>
+              <Text style={estilos.textoBotao}>Começar configuração</Text>
             </Pressable>
 
             <Text style={estilos.nota}>
@@ -132,24 +130,28 @@ const estilos = StyleSheet.create({
     backgroundColor: '#EAF1F0',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 10,
   },
+  scroll: { flex: 1, width: '100%' },
   conteudo: {
     flexGrow: 1,
     width: '100%',
     maxWidth: 420,
     alignSelf: 'center',
-    paddingTop: 12,
-    paddingBottom: 12,
-    paddingHorizontal: 26,
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingHorizontal: 22,
     justifyContent: 'space-between',
-    gap: 18,
+    gap: 14,
     backgroundColor: '#F3F7F5',
     borderRadius: 32,
   },
-  conteudoCompacto: { paddingHorizontal: 20, gap: 12 },
+  conteudoCompacto: { paddingHorizontal: 18, gap: 12 },
+  marcaTopo: { width: '100%', alignItems: 'center', marginBottom: -4 },
   ilustracao: {
-    height: 220,
+    width: '100%',
+    height: 190,
     borderRadius: 26,
     backgroundColor: '#EAF6F3',
     alignItems: 'center',
@@ -276,12 +278,12 @@ const estilos = StyleSheet.create({
     borderColor: '#0D5A5F',
     borderRadius: 20,
   },
-  introducao: { alignItems: 'center', gap: 10 },
+  introducao: { width: '100%', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
   chamada: { fontSize: 13, fontWeight: '800', color: '#0A6C73', letterSpacing: 0.8 },
   titulo: {
-    maxWidth: 360,
-    fontSize: 31,
-    lineHeight: 38,
+    maxWidth: 330,
+    fontSize: 29,
+    lineHeight: 35,
     fontWeight: '800',
     letterSpacing: -1,
     textAlign: 'center',
@@ -292,22 +294,22 @@ const estilos = StyleSheet.create({
     lineHeight: 34,
   },
   descricao: {
-    maxWidth: 364,
+    maxWidth: 350,
     marginTop: 2,
     fontSize: 16,
     lineHeight: 24,
     textAlign: 'center',
     color: '#42524C',
   },
-  beneficios: { flexDirection: 'row', gap: 8 },
+  beneficios: { width: '100%', flexDirection: 'row', gap: 8, alignItems: 'stretch' },
   cartaoBeneficio: {
     flex: 1,
-    minHeight: 82,
-    flexDirection: 'row',
+    minHeight: 104,
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
+    gap: 7,
+    paddingHorizontal: 8,
     paddingVertical: 12,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
@@ -321,11 +323,11 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 6,
   },
   textoBeneficio: {
-    flexShrink: 1,
+    width: '100%',
     fontSize: 13,
-    lineHeight: 16,
+    lineHeight: 17,
     fontWeight: '700',
-    textAlign: 'left',
+    textAlign: 'center',
     color: '#17363A',
   },
   textoBeneficioCompacto: {
@@ -341,13 +343,11 @@ const estilos = StyleSheet.create({
   pontoCadeado: { width: 3, height: 3, borderRadius: 2, backgroundColor: '#0A6C73' },
   iconeSemIp: { width: 18, height: 18, borderWidth: 2, borderColor: '#0A6C73', borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   xSemIp: { marginTop: -2, fontSize: 13, lineHeight: 14, fontWeight: '700', color: '#0A6C73' },
-  rodapeConteudo: { gap: 14, alignItems: 'center' },
-  paginacao: { height: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5 },
-  pontoPagina: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#BDD2D0' },
-  paginaAtual: { width: 20, backgroundColor: '#0A6C73' },
+  rodapeConteudo: { width: '100%', gap: 12, alignItems: 'center' },
   botao: {
-    width: '100%',
-    minHeight: 60,
+    width: '92%',
+    maxWidth: 320,
+    minHeight: 54,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

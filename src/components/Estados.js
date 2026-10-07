@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
+import { ViewAcessivel as View, TextoAcessivel as Text } from '../context/AcessibilidadeContext';
 import { cores, fonte } from '../theme';
 import BotaoPrincipal from './BotaoPrincipal';
 

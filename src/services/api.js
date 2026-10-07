@@ -8,7 +8,7 @@ export class ErroApi extends Error {
   }
 }
 
-export async function get(caminho, parametros = {}) {
+async function requisitar(metodo, caminho, parametros = {}, corpo) {
   if (!API_URL) {
     throw new ErroApi('Configure EXPO_PUBLIC_API_URL para usar a API', 'configuracao');
   }
@@ -24,7 +24,8 @@ export async function get(caminho, parametros = {}) {
     if (!desenvolvimento && destino.protocol !== 'https:') {
       throw new ErroApi('A API deve usar HTTPS fora do modo de desenvolvimento', 'configuracao');
     }
-    const query = new URLSearchParams(parametros).toString();
+    const entradas = Object.entries(parametros).filter(([, valor]) => valor != null);
+    const query = new URLSearchParams(entradas.map(([chave, valor]) => [chave, String(valor)])).toString();
     url = `${destino.toString()}${query ? `?${query}` : ''}`;
   } catch (erro) {
     if (erro instanceof ErroApi) throw erro;
@@ -34,7 +35,12 @@ export async function get(caminho, parametros = {}) {
   const controle = new AbortController();
   const timer = setTimeout(() => controle.abort(), TIMEOUT_MS);
   try {
-    const resposta = await fetch(url, { signal: controle.signal, headers: { Accept: 'application/json' } });
+    const resposta = await fetch(url, {
+      method: metodo,
+      signal: controle.signal,
+      headers: { Accept: 'application/json', ...(corpo ? { 'Content-Type': 'application/json' } : {}) },
+      ...(corpo ? { body: JSON.stringify(corpo) } : {}),
+    });
     if (!resposta.ok) throw new ErroApi(`Servidor respondeu ${resposta.status}`, 'servidor', resposta.status);
     try {
       return await resposta.json();
@@ -49,3 +55,6 @@ export async function get(caminho, parametros = {}) {
     clearTimeout(timer);
   }
 }
+
+export const get = (caminho, parametros = {}) => requisitar('GET', caminho, parametros);
+export const post = (caminho, corpo) => requisitar('POST', caminho, {}, corpo);

@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { ViewAcessivel as View, TextoAcessivel as Text } from '../context/AcessibilidadeContext';
 import { cores, fonte } from '../theme';
 
 export default function Titulo({ titulo, subtitulo }) {

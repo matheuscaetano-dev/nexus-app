@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
+import { ScrollViewAcessivel as ScrollView } from '../context/AcessibilidadeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MarcaNexus from './MarcaNexus';
 import { cores, espaco } from '../theme';
