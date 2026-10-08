@@ -84,7 +84,7 @@ export default function EscolherModeloScreen({ navigation }) {
 
 const estilos = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
-  conteudo: { padding: espaco.xl, paddingBottom: espaco.xxl * 2 },
+  conteudo: { padding: espaco.xl, paddingTop: espaco.xl + espaco.sm, paddingBottom: espaco.xxl * 2 },
   overline: { fontSize: 11, fontWeight: '800', color: cores.primaria, letterSpacing: 0.5, marginBottom: 4 },
   tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, marginBottom: espaco.lg },
   boxInfo: { backgroundColor: cores.fundoSecundario, padding: espaco.lg, borderRadius: raio.lg, marginBottom: espaco.xl },

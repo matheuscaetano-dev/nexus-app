@@ -91,10 +91,10 @@ export default function PlanejarScreen({ navigation }) {
 
 const estilos = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
-  conteudo: { padding: espaco.xl, paddingBottom: espaco.xxl * 2 },
+  conteudo: { padding: espaco.xl, paddingTop: espaco.xl + espaco.sm, paddingBottom: espaco.xxl * 2 },
   cabecalho: { marginBottom: espaco.sm },
   overline: { fontSize: 12, fontWeight: '800', color: cores.primaria, letterSpacing: 0.5, marginBottom: 4 },
-  tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, maxWidth: 300, marginBottom: espaco.md },
+  tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, maxWidth: 300, marginBottom: espaco.sm },
   descritivo: { fontSize: 16, fontWeight: '800', color: cores.texto, marginBottom: 4 },
   textoCorpo: { fontSize: 14, color: cores.textoSecundario, lineHeight: 22, marginBottom: espaco.xl },
   infoGrid: { flexDirection: 'row', gap: espaco.md, marginBottom: espaco.xl },
@@ -108,8 +108,8 @@ const estilos = StyleSheet.create({
   chipTexto: { fontSize: 14, fontWeight: '700', color: cores.textoSecundario },
   chipTextoAtivo: { fontSize: 14, fontWeight: '800', color: cores.primariaEscura },
   horarioDestaque: { color: '#88BDB7', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
-  linhaTituloDestaque: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: -4 },
-  tituloDestaque: { fontSize: 24, fontWeight: '800', color: cores.sobrePrimaria, flex: 1, marginRight: 10, lineHeight: 28 },
+  linhaTituloDestaque: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: -4, gap: espaco.sm },
+  tituloDestaque: { fontSize: 28, fontWeight: '800', color: cores.sobrePrimaria, flex: 1, marginRight: 4, lineHeight: 34, flexShrink: 1 },
   textoDestaque: { color: cores.sobrePrimaria, fontSize: 14, lineHeight: 22, marginTop: espaco.sm },
   statsContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: espaco.md, paddingBottom: espaco.sm, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)' },
   statLabel: { fontSize: 11, fontWeight: '800', color: '#88BDB7', letterSpacing: 0.5 },

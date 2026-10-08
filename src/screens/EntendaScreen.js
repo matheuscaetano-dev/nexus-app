@@ -63,9 +63,9 @@ export default function EntendaScreen() {
 
 const estilos = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
-  conteudo: { padding: espaco.xl, paddingBottom: espaco.xxl * 2 },
+  conteudo: { padding: espaco.xl, paddingTop: espaco.xl + espaco.sm, paddingBottom: espaco.xxl * 2 },
   overline: { fontSize: 11, fontWeight: '800', color: cores.primaria, letterSpacing: 0.5, marginBottom: 4 },
-  tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, marginBottom: espaco.xl },
+  tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, marginBottom: espaco.lg },
   linhaTopoSecao: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: espaco.md },
   tituloSecao: { fontSize: 18, fontWeight: '800', color: cores.texto, marginBottom: espaco.sm },
   listaTermos: { backgroundColor: cores.superficie, borderRadius: raio.xl, borderWidth: 1, borderColor: cores.divisor, overflow: 'hidden' },

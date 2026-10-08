@@ -37,7 +37,6 @@ function IconePessoa() {
     <View style={estilos.iconePessoa} importantForAccessibility="no">
       <View style={estilos.cabecaPessoa} />
       <View style={estilos.corpoPessoa} />
-      <View style={estilos.maisPessoa} />
     </View>
   );
 }
@@ -56,7 +55,9 @@ function IconeCadeado() {
 function IconeSemIp() {
   return (
     <View style={estilos.iconeSemIp} importantForAccessibility="no">
-      <Text style={estilos.xSemIp}>×</Text>
+      <View style={estilos.circuloSemIp}>
+        <Text style={estilos.xSemIp}>×</Text>
+      </View>
     </View>
   );
 }
@@ -307,8 +308,8 @@ const estilos = StyleSheet.create({
     minHeight: 104,
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
+    justifyContent: 'flex-start',
+    gap: 8,
     paddingHorizontal: 8,
     paddingVertical: 12,
     borderRadius: 16,
@@ -333,15 +334,15 @@ const estilos = StyleSheet.create({
   textoBeneficioCompacto: {
     fontSize: 12,
   },
-  iconePessoa: { width: 24, height: 30, alignItems: 'center', justifyContent: 'flex-end' },
-  cabecaPessoa: { position: 'absolute', top: 1, left: 8, width: 8, height: 8, borderRadius: 4, borderWidth: 1, borderColor: '#0A6C73' },
-  corpoPessoa: { width: 16, height: 11, borderTopLeftRadius: 8, borderTopRightRadius: 8, borderWidth: 1, borderBottomWidth: 0, borderColor: '#0A6C73' },
-  maisPessoa: { position: 'absolute', right: 1, top: 8, width: 7, height: 1.5, backgroundColor: '#0A6C73' },
-  iconeCadeado: { width: 22, height: 28, alignItems: 'center', justifyContent: 'flex-end' },
+  iconePessoa: { width: 28, height: 30, alignItems: 'center', justifyContent: 'flex-end' },
+  cabecaPessoa: { position: 'absolute', top: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: '#0A6C73' },
+  corpoPessoa: { width: 22, height: 14, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: '#0A6C73' },
+  iconeCadeado: { width: 28, height: 30, alignItems: 'center', justifyContent: 'flex-end' },
   arcoCadeado: { position: 'absolute', top: 1, width: 13, height: 12, borderWidth: 1.3, borderBottomWidth: 0, borderColor: '#0A6C73', borderTopLeftRadius: 7, borderTopRightRadius: 7 },
   corpoCadeado: { width: 18, height: 14, borderWidth: 1.3, borderColor: '#0A6C73', borderRadius: 3, alignItems: 'center', justifyContent: 'center' },
   pontoCadeado: { width: 3, height: 3, borderRadius: 2, backgroundColor: '#0A6C73' },
-  iconeSemIp: { width: 18, height: 18, borderWidth: 2, borderColor: '#0A6C73', borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  iconeSemIp: { width: 28, height: 30, alignItems: 'center', justifyContent: 'center' },
+  circuloSemIp: { width: 18, height: 18, borderWidth: 2, borderColor: '#0A6C73', borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   xSemIp: { marginTop: -2, fontSize: 13, lineHeight: 14, fontWeight: '700', color: '#0A6C73' },
   rodapeConteudo: { width: '100%', gap: 12, alignItems: 'center' },
   botao: {
