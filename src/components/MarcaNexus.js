@@ -1,16 +1,17 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 import { ViewAcessivel as View, TextoAcessivel as Text } from '../context/AcessibilidadeContext';
 import { APP_NOME } from '../config';
 import { cores } from '../theme';
 
-export default function MarcaNexus() {
+export default function MarcaNexus({ completa = false }) {
+  if (completa) {
+    return <Image source={require('../../assets/logo-nexus.png')} style={estilos.logoCompleta} resizeMode="contain" accessible accessibilityLabel={`${APP_NOME}, logo`} />;
+  }
+
   return (
     <View style={estilos.marca} accessible accessibilityRole="text" accessibilityLabel={`${APP_NOME}, previsão de conexão`}>
-      <View style={estilos.simbolo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Text style={estilos.letra}>N</Text>
-        <View style={estilos.ponto} />
-      </View>
+      <Image source={require('../../assets/logo-nexus-simbolo.png')} style={estilos.simbolo} resizeMode="contain" importantForAccessibility="no" accessibilityElementsHidden />
       <Text style={estilos.nome}>{APP_NOME}</Text>
     </View>
   );
@@ -18,14 +19,7 @@ export default function MarcaNexus() {
 
 const estilos = StyleSheet.create({
   marca: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 2 },
-  simbolo: {
-    width: 40, height: 40, borderRadius: 13, backgroundColor: cores.primaria,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  letra: { color: cores.sobrePrimaria, fontSize: 25, lineHeight: 30, fontWeight: '800' },
-  ponto: {
-    position: 'absolute', width: 6, height: 6, borderRadius: 3,
-    backgroundColor: '#B9E4CF', right: 7, bottom: 7,
-  },
+  simbolo: { width: 42, height: 42 },
+  logoCompleta: { width: 112, height: 98 },
   nome: { fontSize: 21, fontWeight: '800', letterSpacing: 0.2, color: cores.texto },
 });

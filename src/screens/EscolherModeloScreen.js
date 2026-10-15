@@ -5,6 +5,7 @@ import BotaoPrincipal from '../components/BotaoPrincipal';
 import { EstadoCarregando, EstadoErro } from '../components/Estados';
 import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
+import Icone from '../components/Icone';
 
 function CartaoModelo({ item, selecionado, onPress }) {
   const metadados = [
@@ -49,15 +50,15 @@ export default function EscolherModeloScreen({ navigation }) {
   return (
     <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
       <Text style={estilos.overline}>CONFIGURAÇÃO INICIAL - ETAPA 1 DE 2</Text>
-      <Text capitalizar style={estilos.tituloGigante}>Escolher modelo de previsão</Text>
+      <Text style={estilos.tituloGigante}>Escolher Modelo de Previsão</Text>
 
       <View style={estilos.boxInfo}>
-        <Text capitalizar style={estilos.boxTitulo}>⚙️ Sobre os modelos</Text>
+        <View style={estilos.boxTituloLinha}><Icone name="information-circle-outline" size={20} color={cores.primaria} /><Text style={estilos.boxTitulo}>Sobre os Modelos</Text></View>
         <Text style={estilos.boxTexto}>A API fornece previsões previamente calculadas. O algoritmo é apenas metadado; a classificação de qualidade usa a mesma regra para todos. Não há um modelo declarado como superior.</Text>
       </View>
 
       <View style={estilos.linhaModelos}>
-        <Text capitalizar style={estilos.tituloSecao}>Modelos disponíveis</Text>
+        <Text style={estilos.tituloSecao}>Modelos Disponíveis:</Text>
         <Text style={estilos.subtituloSecao}>{modelos.length === 1 ? '1 modelo ativo' : `${modelos.length} modelos ativos`}</Text>
       </View>
 
@@ -88,7 +89,8 @@ const estilos = StyleSheet.create({
   overline: { fontSize: 11, fontWeight: '800', color: cores.primaria, letterSpacing: 0.5, marginBottom: 4 },
   tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, marginBottom: espaco.lg },
   boxInfo: { backgroundColor: cores.fundoSecundario, padding: espaco.lg, borderRadius: raio.lg, marginBottom: espaco.xl },
-  boxTitulo: { fontSize: 14, fontWeight: '800', color: cores.texto, marginBottom: 4 },
+  boxTituloLinha: { flexDirection: 'row', alignItems: 'center', gap: espaco.xs, marginBottom: 4 },
+  boxTitulo: { fontSize: 14, fontWeight: '800', color: cores.texto },
   boxTexto: { fontSize: 13, color: cores.textoSecundario, lineHeight: 18 },
   linhaModelos: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: espaco.md },
   tituloSecao: { fontSize: 18, fontWeight: '800', color: cores.texto },

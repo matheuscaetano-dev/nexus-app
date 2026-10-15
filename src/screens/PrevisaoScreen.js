@@ -10,6 +10,7 @@ import { formatarMs, formatarPercentual, inicioDaHora } from '../utils/Formatado
 import { useConexao } from '../context/ConexaoContext';
 import MarcaNexus from '../components/MarcaNexus';
 import { cores, espaco, raio } from '../theme';
+import Icone from '../components/Icone';
 
 export default function PrevisaoScreen({ navigation }) {
   const { modelo, local } = useConexao();
@@ -22,7 +23,7 @@ export default function PrevisaoScreen({ navigation }) {
       <View style={estilos.cabecalho}>
         <MarcaNexus />
         <Text style={estilos.overline}>PREVISÃO PARA SUA REGIÃO</Text>
-        <Text capitalizar style={estilos.tituloGigante}>Olá! Como está a conexão?</Text>
+        <Text style={estilos.tituloGigante}>Olá! Como Está a Conexão?</Text>
       </View>
 
       <View style={estilos.linhaModelo}>
@@ -41,7 +42,7 @@ export default function PrevisaoScreen({ navigation }) {
         <Pressable onPress={() => navigation.navigate('Localizacao')}><Text style={estilos.linkVerTudo}>Escolher referência</Text></Pressable>
       </Cartao> : atual.carregando ? <EstadoCarregando /> : atual.erro ? <EstadoErro erro={atual.erro} onTentarNovamente={atual.recarregar} /> : (
         <Cartao variante="destaque">
-          <Text style={estilos.horarioDestaque}>Estimativa para agora</Text>
+          <Text style={estilos.horarioDestaque}>Estimativa para Agora</Text>
           <View style={estilos.linhaTituloDestaque}>
             <Text style={estilos.tituloDestaque}>{atual.dados.nivel.resumo}</Text>
             <BadgeNivel corId={atual.dados.nivel.id} rotulo={atual.dados.nivel.rotulo} simbolo={atual.dados.nivel.simbolo} iconeEsquerda />
@@ -55,8 +56,8 @@ export default function PrevisaoScreen({ navigation }) {
 
       <View style={estilos.secaoProximasHoras}>
         <View style={estilos.linhaHeaderSecao}>
-          <Text capitalizar style={estilos.tituloSecao}>Próximas horas</Text>
-          <Pressable onPress={() => navigation.navigate('Timeline')}><Text style={estilos.linkVerTudo}>Ver previsão</Text></Pressable>
+          <Text style={estilos.tituloSecao}>Próximas Horas</Text>
+          <Pressable onPress={() => navigation.navigate('Timeline')}><Text style={estilos.linkVerTudo}>Ver Previsão</Text></Pressable>
         </View>
         {!modelo || !local ? null : proximas.carregando ? <EstadoCarregando mensagem="Carregando próximas horas…" /> : proximas.erro ? <EstadoErro erro={proximas.erro} onTentarNovamente={proximas.recarregar} /> : (
           <View style={estilos.graficoContainer}>
@@ -76,7 +77,7 @@ export default function PrevisaoScreen({ navigation }) {
       </View>
 
       <Pressable onPress={() => navigation.navigate('Localizacao')} style={estilos.avisoLocalizacao}>
-        <Text style={estilos.iconeAviso}>📍</Text>
+        <Icone name="location-outline" size={21} color={cores.primaria} style={estilos.iconeAviso} />
         <View style={{ flex: 1 }}>
           <Text style={estilos.tituloAvisoLocalizacao}>Referência atual: probe {local?.probeId ?? 'não selecionada'}</Text>
           <Text style={estilos.textoAvisoLocalizacao}>Usamos uma localização pública aproximada para buscar a previsão mais próxima. Toque para trocar.</Text>
@@ -115,7 +116,7 @@ const estilos = StyleSheet.create({
   barraHora: { fontSize: 12, color: cores.textoSecundario, fontWeight: '600' },
   legendaGrafico: { fontSize: 12, color: cores.textoSecundario, textAlign: 'center', marginTop: 12, lineHeight: 18 },
   avisoLocalizacao: { flexDirection: 'row', gap: 12, backgroundColor: cores.fundoSecundario, padding: espaco.lg, borderRadius: raio.xl, marginTop: espaco.xl },
-  iconeAviso: { fontSize: 20 },
+  iconeAviso: { marginTop: 1 },
   tituloAvisoLocalizacao: { fontSize: 14, fontWeight: '700', color: cores.texto, marginBottom: 2 },
   textoAvisoLocalizacao: { fontSize: 13, color: cores.textoSecundario, lineHeight: 18 },
 });

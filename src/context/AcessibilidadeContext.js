@@ -69,12 +69,11 @@ function textoDeAltoContraste() {
   return '#FFFFFF';
 }
 
-export function TextoAcessivel({ style, capitalizar = false, ...props }) {
+export function TextoAcessivel({ style, ...props }) {
   const acessibilidade = useAcessibilidade();
   const original = StyleSheet.flatten(style) || {};
   const tamanho = original.fontSize || 16;
-  const transformarTitulo = capitalizar || props.accessibilityRole === 'header';
-  return <NativeText {...props} style={[style, transformarTitulo && { textTransform: 'capitalize' }, estiloAcessivel(style, acessibilidade, 'text'), acessibilidade.textoAmpliado && { fontSize: tamanho * 1.18 }]} />;
+  return <NativeText {...props} style={[style, estiloAcessivel(style, acessibilidade, 'text'), acessibilidade.textoAmpliado && { fontSize: tamanho * 1.18 }]} />;
 }
 
 export function ViewAcessivel({ style, ...props }) {

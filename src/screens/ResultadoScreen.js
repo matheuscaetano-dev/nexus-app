@@ -5,6 +5,7 @@ import Cartao from '../components/Cartao';
 import BadgeNivel from '../components/BadgeNivel';
 import BotaoPrincipal from '../components/BotaoPrincipal';
 import { cores, espaco, raio } from '../theme';
+import Icone from '../components/Icone';
 
 export default function ResultadoScreen({ navigation, route }) {
   const previsao = route?.params?.previsao;
@@ -13,23 +14,23 @@ export default function ResultadoScreen({ navigation, route }) {
     <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
       <View style={estilos.cabecalho}>
         <Text style={estilos.overline}>DETALHES EM LINGUAGEM SIMPLES</Text>
-        <Text capitalizar style={estilos.tituloGigante}>Por que essa previsão?</Text>
+        <Text style={estilos.tituloGigante}>Por Que Essa Previsão?</Text>
       </View>
 
       <Cartao>
         <View style={estilos.linhaTopoDetalhe}>
           <View>
             <Text style={estilos.labelModelo}>{atividade || 'Previsão atual'}</Text>
-            <Text capitalizar style={estilos.tituloCartao}>Conexão {previsao?.nivel.rotulo.toLowerCase() || '—'}</Text>
+            <Text style={estilos.tituloCartao}>Conexão {previsao?.nivel.rotulo.toLowerCase() || '—'}</Text>
           </View>
           {previsao && <BadgeNivel corId={previsao.nivel.id} rotulo={previsao.nivel.rotulo} simbolo={previsao.nivel.simbolo} iconeEsquerda />}
         </View>
 
         <View style={estilos.listaDetalhes}>
           <View style={estilos.itemDetalhe}>
-            <Text style={estilos.iconeDetalhe}>⏱️</Text>
+            <Icone name="stopwatch-outline" size={23} color={cores.primaria} style={estilos.iconeDetalhe} />
             <View style={estilos.textoDetalheContainer}>
-              <Text style={estilos.tituloDetalhe}>RTT previsto</Text>
+              <Text style={estilos.tituloDetalhe}>RTT Previsto</Text>
               <Text style={estilos.descDetalhe}>Tempo estimado para a resposta</Text>
             </View>
             <View style={estilos.valorDetalheContainer}>
@@ -39,7 +40,7 @@ export default function ResultadoScreen({ navigation, route }) {
           </View>
           
           <View style={estilos.itemDetalhe}>
-            <Text style={estilos.iconeDetalhe}>📦</Text>
+            <Icone name="cube-outline" size={23} color={cores.primaria} style={estilos.iconeDetalhe} />
             <View style={estilos.textoDetalheContainer}>
               <Text style={estilos.tituloDetalhe}>Perda de pacotes</Text>
               <Text style={estilos.descDetalhe}>Pacotes que podem se perder</Text>
@@ -51,7 +52,7 @@ export default function ResultadoScreen({ navigation, route }) {
           </View>
           
           <View style={estilos.itemDetalhe}>
-            <Text style={estilos.iconeDetalhe}>⚡</Text>
+            <Icone name="flash-outline" size={23} color={cores.primaria} style={estilos.iconeDetalhe} />
             <View style={estilos.textoDetalheContainer}>
               <Text style={estilos.tituloDetalhe}>Qualidade</Text>
               <Text style={estilos.descDetalhe}>{previsao?.nivel.resumo || 'Qualidade prevista para este período'}</Text>
@@ -64,27 +65,27 @@ export default function ResultadoScreen({ navigation, route }) {
         </View>
       </Cartao>
 
-      <Text capitalizar style={estilos.tituloSecaoMargin}>De onde vem?</Text>
+      <Text style={estilos.tituloSecaoMargin}>De Onde Vem?</Text>
       <Cartao>
         <View style={estilos.listaInfoBasico}>
           <View style={estilos.itemInfoBasico}>
-            <Text style={estilos.iconeInfo}>📍</Text>
+            <Icone name="location-outline" size={23} color={cores.primaria} style={estilos.iconeInfo} />
             <View style={estilos.textoDetalheContainer}>
-              <Text style={estilos.tituloDetalheInfo}>Referência regional aproximada</Text>
+              <Text style={estilos.tituloDetalheInfo}>Referência Regional Aproximada</Text>
               <Text style={estilos.descDetalheInfo}>{previsao?.distanciaProbeKm != null ? `Estação de referência a ${Number(previsao.distanciaProbeKm).toFixed(1).replace('.', ',')} km.` : 'A API ainda não informou a estação de referência.'}</Text>
             </View>
           </View>
           <View style={estilos.itemInfoBasico}>
-            <Text style={estilos.iconeInfo}>🛡️</Text>
+            <Icone name="shield-checkmark-outline" size={23} color={cores.primaria} style={estilos.iconeInfo} />
             <View style={estilos.textoDetalheContainer}>
-              <Text style={estilos.tituloDetalheInfo}>Sua privacidade é preservada</Text>
+              <Text style={estilos.tituloDetalheInfo}>Sua Privacidade é Preservada</Text>
               <Text style={estilos.descDetalheInfo}>Esta demonstração não solicita localização, identidade ou histórico de navegação. A etapa de permissão será conectada depois.</Text>
             </View>
           </View>
           <View style={estilos.itemInfoBasico}>
-            <Text style={estilos.iconeInfo}>📊</Text>
+            <Icone name="bar-chart-outline" size={23} color={cores.primaria} style={estilos.iconeInfo} />
             <View style={estilos.textoDetalheContainer}>
-              <Text style={estilos.tituloDetalheInfo}>Estimativa do modelo</Text>
+              <Text style={estilos.tituloDetalheInfo}>Estimativa do Modelo</Text>
               <Text style={estilos.descDetalheInfo}>Não é uma medição direta da sua internet. Eventos locais podem causar diferenças.</Text>
             </View>
           </View>
@@ -107,7 +108,7 @@ const estilos = StyleSheet.create({
   tituloCartao: { fontSize: 22, fontWeight: '800', color: cores.texto },
   listaDetalhes: { marginTop: espaco.sm, gap: espaco.lg },
   itemDetalhe: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
-  iconeDetalhe: { fontSize: 24, backgroundColor: cores.fundoSecundario, padding: 8, borderRadius: 12 },
+  iconeDetalhe: { backgroundColor: cores.fundoSecundario, padding: 8, borderRadius: 12 },
   textoDetalheContainer: { flex: 1 },
   tituloDetalhe: { fontSize: 15, fontWeight: '800', color: cores.texto },
   descDetalhe: { fontSize: 12, color: cores.textoSecundario, lineHeight: 16 },
@@ -117,7 +118,7 @@ const estilos = StyleSheet.create({
   tituloSecaoMargin: { fontSize: 18, fontWeight: '800', color: cores.texto, marginTop: espaco.xl, marginBottom: espaco.md },
   listaInfoBasico: { gap: espaco.lg },
   itemInfoBasico: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.md },
-  iconeInfo: { fontSize: 24, marginTop: 2, color: cores.primaria },
+  iconeInfo: { width: 28, marginTop: 2 },
   tituloDetalheInfo: { fontSize: 15, fontWeight: '800', color: cores.texto, marginBottom: 2 },
   descDetalheInfo: { fontSize: 13, color: cores.textoSecundario, lineHeight: 18 }
 });

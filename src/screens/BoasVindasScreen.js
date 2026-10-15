@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import { Image, StyleSheet, useWindowDimensions } from 'react-native';
 import { PressableAcessivel as Pressable, ScrollViewAcessivel as ScrollView, TextoAcessivel as Text, ViewAcessivel as View } from '../context/AcessibilidadeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MarcaNexus from '../components/MarcaNexus';
+import Icone from '../components/Icone';
 import { cores, espaco, fonte, raio } from '../theme';
 
 function IlustracaoPrivacidade() {
@@ -13,59 +14,18 @@ function IlustracaoPrivacidade() {
       <View style={estilos.pontoAmarelo} />
       <View style={estilos.pontoVerde} />
       <View style={estilos.seloPrivado}>
-        <Text style={estilos.escudo} importantForAccessibility="no">✓</Text>
+      <Icone name="shield-checkmark-outline" size={16} color="#0D6D77" style={estilos.iconeSelo} />
         <Text style={estilos.textoPrivado}>Sem IP</Text>
       </View>
-      <View style={estilos.iconeExterior}>
-        <View style={estilos.iconeInterior}>
-          <View style={estilos.antena}>
-            <View style={estilos.pontaAntena} />
-            <View style={estilos.mastro} />
-            <View style={estilos.pernaEsquerda} />
-            <View style={estilos.pernaDireita} />
-            <View style={estilos.sinalEsquerdo} />
-            <View style={estilos.sinalDireito} />
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-}
-
-function IconePessoa() {
-  return (
-    <View style={estilos.iconePessoa} importantForAccessibility="no">
-      <View style={estilos.cabecaPessoa} />
-      <View style={estilos.corpoPessoa} />
-    </View>
-  );
-}
-
-function IconeCadeado() {
-  return (
-    <View style={estilos.iconeCadeado} importantForAccessibility="no">
-      <View style={estilos.arcoCadeado} />
-      <View style={estilos.corpoCadeado}>
-        <View style={estilos.pontoCadeado} />
-      </View>
-    </View>
-  );
-}
-
-function IconeSemIp() {
-  return (
-    <View style={estilos.iconeSemIp} importantForAccessibility="no">
-      <View style={estilos.circuloSemIp}>
-        <Text style={estilos.xSemIp}>×</Text>
-      </View>
+      <Image source={require('../../assets/logo-nexus-simbolo.png')} style={estilos.logoHero} resizeMode="contain" importantForAccessibility="no" accessibilityElementsHidden />
     </View>
   );
 }
 
 const beneficios = [
-  { id: 'cadastro', texto: 'Sem cadastro', Icone: IconePessoa },
-  { id: 'dados', texto: 'Sem dados pessoais', Icone: IconeCadeado },
-  { id: 'ip', texto: 'Sem busca por IP', Icone: IconeSemIp },
+  { id: 'cadastro', texto: 'Sem Cadastro', icone: 'person-outline' },
+  { id: 'dados', texto: 'Sem Dados Pessoais', icone: 'lock-closed-outline' },
+  { id: 'ip', texto: 'Sem Busca por IP', icone: 'eye-off-outline' },
 ];
 
 export default function BoasVindasScreen({ navigation }) {
@@ -78,14 +38,14 @@ export default function BoasVindasScreen({ navigation }) {
         <ScrollView style={estilos.scroll} contentContainerStyle={[estilos.conteudo, compacto && estilos.conteudoCompacto]}
           bounces={false} showsVerticalScrollIndicator={false}>
           <View style={estilos.marcaTopo}>
-            <MarcaNexus />
+            <MarcaNexus completa />
           </View>
           <IlustracaoPrivacidade />
 
           <View style={estilos.introducao}>
             <Text style={estilos.chamada}>PREVISÃO DE CONEXÃO</Text>
             <Text accessibilityRole="header" style={[estilos.titulo, compacto && estilos.tituloCompacto]}>
-              Veja uma estimativa para sua região
+              Veja uma Estimativa para sua Região
             </Text>
             <Text style={estilos.descricao}>
               Escolha um modelo e uma probe pública como referência. A API usa previsões já calculadas; o resultado é regional e não mede a conexão do seu aparelho.
@@ -93,10 +53,10 @@ export default function BoasVindasScreen({ navigation }) {
           </View>
 
           <View style={estilos.beneficios}>
-            {beneficios.map(({ id, texto, Icone }) => (
+            {beneficios.map(({ id, texto, icone }) => (
               <View key={id} style={[estilos.cartaoBeneficio, compacto && estilos.cartaoBeneficioCompacto]} accessible accessibilityRole="text"
                 accessibilityLabel={texto}>
-                <Icone />
+                <Icone name={icone} size={22} color="#0A6C73" style={estilos.iconeBeneficio} />
                 <Text style={[estilos.textoBeneficio, compacto && estilos.textoBeneficioCompacto]}>{texto}</Text>
               </View>
             ))}
@@ -109,13 +69,13 @@ export default function BoasVindasScreen({ navigation }) {
               accessibilityLabel="Começar a configurar o aplicativo"
               style={({ pressed }) => [estilos.botao, pressed && estilos.botaoPressionado]}
             >
-              <Text style={estilos.seta}>→</Text>
-              <Text style={estilos.textoBotao}>Começar configuração</Text>
+              <Icone name="arrow-forward" size={20} color="#FFFFFF" />
+              <Text style={estilos.textoBotao}>Começar Configuração</Text>
             </Pressable>
 
             <Text style={estilos.nota}>
-              <Text style={estilos.iconeAcessibilidade}>◉</Text>
-              {'  '}Tecnologia inclusiva • ODS 9 e 10
+              <Icone name="accessibility-outline" size={14} color="#0A6C73" />
+              {'  '}Tecnologia Inclusiva • ODS 9 e 10
             </Text>
           </View>
         </ScrollView>
@@ -204,81 +164,9 @@ const estilos = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
-  escudo: { fontSize: 15, color: '#0D6D77' },
+  iconeSelo: { marginLeft: -1 },
   textoPrivado: { fontSize: 12, fontWeight: '700', color: '#1D2D2C' },
-  iconeExterior: {
-    width: 108,
-    height: 108,
-    borderRadius: 24,
-    backgroundColor: '#0D6D77',
-    transform: [{ rotate: '-4deg' }],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconeInterior: {
-    width: 82,
-    height: 82,
-    borderRadius: 20,
-    backgroundColor: '#F5B84E',
-    transform: [{ rotate: '4deg' }],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  antena: { width: 48, height: 48, alignItems: 'center', justifyContent: 'flex-end' },
-  pontaAntena: {
-    position: 'absolute',
-    top: 5,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: '#0D5A5F',
-  },
-  mastro: {
-    position: 'absolute',
-    top: 14,
-    width: 2.5,
-    height: 26,
-    backgroundColor: '#0D5A5F',
-  },
-  pernaEsquerda: {
-    position: 'absolute',
-    top: 28,
-    left: 15,
-    width: 2.5,
-    height: 15,
-    backgroundColor: '#0D5A5F',
-    transform: [{ rotate: '22deg' }],
-  },
-  pernaDireita: {
-    position: 'absolute',
-    top: 28,
-    right: 15,
-    width: 2.5,
-    height: 15,
-    backgroundColor: '#0D5A5F',
-    transform: [{ rotate: '-22deg' }],
-  },
-  sinalEsquerdo: {
-    position: 'absolute',
-    left: 4,
-    top: 12,
-    width: 14,
-    height: 20,
-    borderLeftWidth: 1.5,
-    borderColor: '#0D5A5F',
-    borderRadius: 20,
-  },
-  sinalDireito: {
-    position: 'absolute',
-    right: 4,
-    top: 12,
-    width: 14,
-    height: 20,
-    borderRightWidth: 1.5,
-    borderColor: '#0D5A5F',
-    borderRadius: 20,
-  },
+  logoHero: { width: 128, height: 145 },
   introducao: { width: '100%', alignItems: 'center', gap: 8, paddingHorizontal: 4 },
   chamada: { fontSize: 13, fontWeight: '800', color: '#0A6C73', letterSpacing: 0.8 },
   titulo: {
@@ -334,16 +222,7 @@ const estilos = StyleSheet.create({
   textoBeneficioCompacto: {
     fontSize: 12,
   },
-  iconePessoa: { width: 28, height: 30, alignItems: 'center', justifyContent: 'flex-end' },
-  cabecaPessoa: { position: 'absolute', top: 1, width: 10, height: 10, borderRadius: 5, backgroundColor: '#0A6C73' },
-  corpoPessoa: { width: 22, height: 14, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: '#0A6C73' },
-  iconeCadeado: { width: 28, height: 30, alignItems: 'center', justifyContent: 'flex-end' },
-  arcoCadeado: { position: 'absolute', top: 1, width: 13, height: 12, borderWidth: 1.3, borderBottomWidth: 0, borderColor: '#0A6C73', borderTopLeftRadius: 7, borderTopRightRadius: 7 },
-  corpoCadeado: { width: 18, height: 14, borderWidth: 1.3, borderColor: '#0A6C73', borderRadius: 3, alignItems: 'center', justifyContent: 'center' },
-  pontoCadeado: { width: 3, height: 3, borderRadius: 2, backgroundColor: '#0A6C73' },
-  iconeSemIp: { width: 28, height: 30, alignItems: 'center', justifyContent: 'center' },
-  circuloSemIp: { width: 18, height: 18, borderWidth: 2, borderColor: '#0A6C73', borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  xSemIp: { marginTop: -2, fontSize: 13, lineHeight: 14, fontWeight: '700', color: '#0A6C73' },
+  iconeBeneficio: { width: 28, height: 30, textAlign: 'center', textAlignVertical: 'center' },
   rodapeConteudo: { width: '100%', gap: 12, alignItems: 'center' },
   botao: {
     width: '92%',
@@ -360,5 +239,4 @@ const estilos = StyleSheet.create({
   seta: { fontSize: 24, lineHeight: 24, color: '#FFFFFF' },
   textoBotao: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   nota: { marginTop: 1, fontSize: 12, color: '#4F5D58', textAlign: 'center' },
-  iconeAcessibilidade: { color: '#0A6C73' },
 });

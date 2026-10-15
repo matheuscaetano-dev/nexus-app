@@ -6,6 +6,7 @@ import OpcaoSelecionavel from '../components/OpcaoSelecionavel';
 import { EstadoCarregando, EstadoErro } from '../components/Estados';
 import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
+import Icone from '../components/Icone';
 
 const formatarCoordenada = (valor) => Number(valor).toLocaleString('pt-BR', {
   minimumFractionDigits: 2,
@@ -22,42 +23,42 @@ export default function LocalizacaoScreen({ navigation }) {
   return (
     <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
       <Text style={estilos.overline}>CONFIGURAÇÃO INICIAL - ETAPA 2 DE 2</Text>
-      <Text capitalizar style={estilos.tituloGigante}>Escolher referência regional</Text>
+      <Text style={estilos.tituloGigante}>Escolher Referência Regional</Text>
 
       <View style={estilos.ilustracaoContainer}>
         <View style={estilos.ilustracaoBox}>
-          <Text style={estilos.iconeGrande}>📍</Text>
+          <Icone name="location" size={48} color={cores.primaria} />
         </View>
       </View>
 
-      <Text capitalizar style={estilos.tituloCentro}>Encontre uma referência perto de você</Text>
+      <Text style={estilos.tituloCentro}>Encontre uma Referência Perto de Você</Text>
       <Text style={estilos.textoCentro}>A API não fornece nomes de cidades para essas probes. Escolha uma referência pelo país e pelas coordenadas aproximadas; elas não representam seu endereço ou localização exata.</Text>
 
       <View style={estilos.listaVantagens}>
         <View style={estilos.itemVantagem}>
-          <Text style={estilos.iconeVantagem}>🛡️</Text>
+          <Icone name="shield-checkmark-outline" size={24} color={cores.primaria} style={estilos.iconeVantagem} />
           <View style={{flex:1}}>
-            <Text capitalizar style={estilos.tituloVantagem}>A probe é a referência</Text>
+            <Text style={estilos.tituloVantagem}>A probe é a Referência</Text>
             <Text style={estilos.textoVantagem}>A API não retorna o endereço IP das probes.</Text>
           </View>
         </View>
         <View style={estilos.itemVantagem}>
-          <Text style={estilos.iconeVantagem}>📡</Text>
+          <Icone name="radio-outline" size={24} color={cores.primaria} style={estilos.iconeVantagem} />
           <View style={{flex:1}}>
-            <Text capitalizar style={estilos.tituloVantagem}>Referência regional</Text>
+            <Text style={estilos.tituloVantagem}>Referência Regional</Text>
             <Text style={estilos.textoVantagem}>A estação próxima serve como base para a consulta de previsão.</Text>
           </View>
         </View>
         <View style={estilos.itemVantagem}>
-          <Text style={estilos.iconeVantagem}>📊</Text>
+          <Icone name="stats-chart-outline" size={24} color={cores.primaria} style={estilos.iconeVantagem} />
           <View style={{flex:1}}>
-            <Text capitalizar style={estilos.tituloVantagem}>É uma estimativa</Text>
+            <Text style={estilos.tituloVantagem}>É uma Estimativa</Text>
             <Text style={estilos.textoVantagem}>O resultado não é uma medição direta da rede ou do aparelho do usuário.</Text>
           </View>
         </View>
       </View>
 
-      <Text capitalizar style={estilos.tituloVantagem}>Localidades disponíveis</Text>
+      <Text style={estilos.tituloVantagem}>Localidades Disponíveis:</Text>
       {carregandoCatalogo ? <EstadoCarregando mensagem="Carregando probes disponíveis…" /> : erroCatalogo ? <EstadoErro erro={erroCatalogo} onTentarNovamente={recarregarCatalogo} /> : locais.map((probe) => (
         <OpcaoSelecionavel
           key={probe.probeId}
@@ -67,7 +68,7 @@ export default function LocalizacaoScreen({ navigation }) {
           onPress={() => setProbeSelecionada(probe.probeId)}
         />
       ))}
-      <BotaoPrincipal titulo="Usar esta referência →" desabilitado={probeSelecionada == null || carregandoCatalogo} onPress={() => {
+      <BotaoPrincipal titulo="Usar esta Referência →" desabilitado={probeSelecionada == null || carregandoCatalogo} onPress={() => {
         const escolhida = locais.find((probe) => probe.probeId === probeSelecionada);
         if (!escolhida) return;
         setLocal(escolhida);
@@ -85,12 +86,11 @@ const estilos = StyleSheet.create({
   tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, marginBottom: espaco.xl },
   ilustracaoContainer: { alignItems: 'center', marginBottom: espaco.xl },
   ilustracaoBox: { width: 100, height: 100, borderRadius: 24, backgroundColor: cores.fundoSecundario, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: cores.borda },
-  iconeGrande: { fontSize: 48 },
   tituloCentro: { fontSize: 24, fontWeight: '800', color: cores.texto, textAlign: 'center', marginBottom: espaco.sm },
   textoCentro: { fontSize: 14, color: cores.textoSecundario, textAlign: 'center', lineHeight: 22, paddingHorizontal: espaco.lg, marginBottom: espaco.xl },
   listaVantagens: { gap: espaco.lg, marginBottom: espaco.xxl },
   itemVantagem: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.md },
-  iconeVantagem: { fontSize: 24, color: cores.primaria },
+  iconeVantagem: { width: 28, marginTop: 1 },
   tituloVantagem: { fontSize: 15, fontWeight: '800', color: cores.texto, marginBottom: 2 },
   textoVantagem: { fontSize: 13, color: cores.textoSecundario, lineHeight: 18 },
   notaRodape: { fontSize: 12, color: cores.textoSecundario, textAlign: 'center', marginTop: espaco.lg }

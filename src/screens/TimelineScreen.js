@@ -8,6 +8,7 @@ import { obterLinhaDoTempo } from '../services/previsaoService';
 import { formatarMs, formatarPercentual } from '../utils/Formatadores';
 import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
+import Icone from '../components/Icone';
 
 export default function TimelineScreen() {
   const { modelo, local } = useConexao();
@@ -28,17 +29,18 @@ export default function TimelineScreen() {
     return { offset, numero: dia.toLocaleDateString('pt-BR', { day: '2-digit' }), semana: offset === 0 ? 'Hoje' : dia.toLocaleDateString('pt-BR', { weekday: 'short' }) };
   });
   const faixaPeriodo = { manha: [6, 12], tarde: [12, 18], noite: [18, 24] }[periodo];
+  const periodoRotulo = { manha: 'Manhã', tarde: 'Tarde', noite: 'Noite' }[periodo];
   const itens = (consulta.dados || []).filter((item) => item.dataHora.getHours() >= faixaPeriodo[0] && item.dataHora.getHours() < faixaPeriodo[1]);
 
   return (
     <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
       <Text style={estilos.overline}>CONSULTAR PREVISÃO</Text>
-      <Text capitalizar style={estilos.tituloGigante}>Timeline da conexão</Text>
+      <Text style={estilos.tituloGigante}>Linha do Tempo da Conexão</Text>
 
       <View style={estilos.linhaResumo}>
         <View>
           <Text style={estilos.labelModelo}>CONSULTA ATUAL</Text>
-          <Text style={estilos.valorModelo}>{inicio.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' })} • {periodo}</Text>
+          <Text style={estilos.valorModelo}>{inicio.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' }).toLocaleUpperCase('pt-BR')} • {periodoRotulo.toLocaleUpperCase('pt-BR')}</Text>
         </View>
         <Text style={estilos.versaoBadge}>{modelo?.name || 'Escolha um modelo'}</Text>
       </View>
@@ -46,7 +48,7 @@ export default function TimelineScreen() {
 
       <View style={estilos.secaoFiltros}>
         <View style={estilos.linhaTopoFiltro}>
-          <Text capitalizar style={estilos.tituloFiltro}>Data</Text>
+          <Text style={estilos.tituloFiltro}>Data</Text>
           <Text style={estilos.subtituloFiltro}>{inicio.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</Text>
         </View>
         <View style={estilos.gridDias}>
@@ -58,17 +60,17 @@ export default function TimelineScreen() {
           ))}
         </View>
 
-        <Text capitalizar style={estilos.tituloFiltroMargin}>Período do dia</Text>
+        <Text style={estilos.tituloFiltroMargin}>Período do Dia</Text>
         <View style={estilos.gridPeriodo}>
-          {[['manha', '☀️ Manhã'], ['tarde', '🌤️ Tarde'], ['noite', '🌙 Noite']].map(([id, rotulo]) => <Pressable key={id} accessibilityRole="button" accessibilityState={{ selected: periodo === id }} onPress={() => setPeriodo(id)} style={[estilos.periodoBox, periodo === id && estilos.periodoBoxAtivo]}><Text style={periodo === id ? estilos.periodoTextoAtivo : estilos.periodoTexto}>{rotulo}</Text></Pressable>)}
+          {[['manha', 'Manhã', 'sunny-outline'], ['tarde', 'Tarde', 'partly-sunny-outline'], ['noite', 'Noite', 'moon-outline']].map(([id, rotulo, icone]) => <Pressable key={id} accessibilityRole="button" accessibilityState={{ selected: periodo === id }} onPress={() => setPeriodo(id)} style={[estilos.periodoBox, periodo === id && estilos.periodoBoxAtivo]}><View style={estilos.periodoConteudo}><Icone name={icone} size={17} color={periodo === id ? cores.primariaEscura : cores.textoSecundario} /><Text style={periodo === id ? estilos.periodoTextoAtivo : estilos.periodoTexto}>{rotulo}</Text></View></Pressable>)}
         </View>
         <Text style={estilos.textoDescritivo}>Exibindo previsões de {faixaPeriodo[0]}h a {faixaPeriodo[1]}h.</Text>
       </View>
 
       <View style={estilos.resultadoTimeline}>
-        <Text style={estilos.labelModelo}>{inicio.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' }).toUpperCase()} • {periodo.toUpperCase()}</Text>
+        <Text style={estilos.labelModelo}>{inicio.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' }).toLocaleUpperCase('pt-BR')} • {periodoRotulo.toLocaleUpperCase('pt-BR')}</Text>
         <View style={estilos.linhaTimelineTitulo}>
-          <Text capitalizar style={estilos.tituloResultado}>Previsões</Text>
+          <Text style={estilos.tituloResultado}>Previsões</Text>
           {itens[0] && <BadgeNivel corId={itens[0].nivel.id} rotulo={itens[0].nivel.rotulo} simbolo={itens[0].nivel.simbolo} iconeEsquerda />}
         </View>
         {consulta.carregando ? <EstadoCarregando mensagem="Buscando linha do tempo…" /> : consulta.erro ? <EstadoErro erro={consulta.erro} onTentarNovamente={consulta.recarregar} /> : itens.length ? itens.map((item) => <View key={item.dataHora.toISOString()} style={estilos.itemTimeline}>
@@ -104,6 +106,7 @@ const estilos = StyleSheet.create({
   tituloFiltroMargin: { fontSize: 16, fontWeight: '800', color: cores.texto, marginBottom: espaco.md },
   gridPeriodo: { flexDirection: 'row', gap: 8, marginBottom: espaco.md },
   periodoBox: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 999, borderWidth: 1, borderColor: cores.divisor },
+  periodoConteudo: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   periodoBoxAtivo: { backgroundColor: '#EAF6F3', borderColor: cores.primaria },
   periodoTexto: { fontSize: 13, fontWeight: '700', color: cores.textoSecundario },
   periodoTextoAtivo: { fontSize: 13, fontWeight: '700', color: cores.primariaEscura },

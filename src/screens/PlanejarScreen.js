@@ -13,6 +13,13 @@ import { USAR_MOCK } from '../config';
 import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
 
+const capitalizarPalavras = (texto) => texto
+  .split(' ')
+  .map((palavra) => ['de', 'e', 'na'].includes(palavra.toLocaleLowerCase('pt-BR'))
+    ? palavra.toLocaleLowerCase('pt-BR')
+    : palavra.charAt(0).toLocaleUpperCase('pt-BR') + palavra.slice(1))
+  .join(' ');
+
 export default function PlanejarScreen({ navigation }) {
   const { modelo, local } = useConexao();
   const [atividadeId, setAtividadeId] = useState('video');
@@ -27,7 +34,7 @@ export default function PlanejarScreen({ navigation }) {
   const avaliacao = resultado.dados ? {
     adequacao: resultado.dados.suitable
       ? { rotulo: 'Adequada', cor: 'boa', simbolo: '✓' }
-      : { rotulo: 'Não recomendada', cor: 'instavel', simbolo: '✕' },
+      : { rotulo: 'Não Recomendada', cor: 'instavel', simbolo: '✕' },
     frase: resultado.dados.recommendation?.message || 'Confira a qualidade prevista antes de iniciar.',
   } : null;
   const atividadesVisiveis = USAR_MOCK ? ATIVIDADES : ATIVIDADES.filter((item) => item.id !== 'jogos');
@@ -36,10 +43,10 @@ export default function PlanejarScreen({ navigation }) {
     <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
       <View style={estilos.cabecalho}>
         <Text style={estilos.overline}>API / ACTIVITY CHECK</Text>
-        <Text capitalizar style={estilos.tituloGigante}>Planejamento por atividade</Text>
+        <Text style={estilos.tituloGigante}>Planejamento por Atividade</Text>
       </View>
 
-      <Text style={estilos.descritivo}>{modelo?.name || 'Escolha um modelo'} • escolha sua atividade</Text>
+      <Text style={estilos.descritivo}>{modelo?.name || 'Escolha um modelo'} • Escolha sua Atividade</Text>
       <Text style={estilos.textoCorpo}>Veja se a previsão estimada é adequada para o que você pretende fazer.</Text>
 
       <View style={estilos.infoGrid}>
@@ -56,7 +63,7 @@ export default function PlanejarScreen({ navigation }) {
       <Text style={estilos.tituloSecao}>ATIVIDADE</Text>
       <View style={estilos.chipsContainer}>
         {atividadesVisiveis.map((item) => <Pressable key={item.id} accessibilityRole="radio" accessibilityState={{ checked: atividadeId === item.id }} onPress={() => setAtividadeId(item.id)} style={[estilos.chip, atividadeId === item.id && estilos.chipAtivo]}>
-          <Text style={atividadeId === item.id ? estilos.chipTextoAtivo : estilos.chipTexto}>{item.nome}</Text>
+          <Text style={atividadeId === item.id ? estilos.chipTextoAtivo : estilos.chipTexto}>{capitalizarPalavras(item.nome)}</Text>
         </Pressable>)}
       </View>
 
@@ -67,7 +74,7 @@ export default function PlanejarScreen({ navigation }) {
       <Cartao variante="destaque" style={{ backgroundColor: '#0E5B63', borderColor: '#0E5B63', marginTop: espaco.xl }}>
         <Text style={estilos.horarioDestaque}>{atividade?.nome.toUpperCase()} • PREVISÃO ATUAL</Text>
         <View style={estilos.linhaTituloDestaque}>
-          <Text style={estilos.tituloDestaque}>{avaliacao.adequacao.rotulo}</Text>
+          <Text numberOfLines={1} style={estilos.tituloDestaque}>{avaliacao.adequacao.rotulo}</Text>
           <BadgeNivel corId={avaliacao.adequacao.cor} rotulo={previsao.dados.nivel.rotulo} simbolo={previsao.dados.nivel.simbolo} iconeEsquerda />
         </View>
         <Text style={estilos.textoDestaque}>{avaliacao.frase}</Text>
@@ -109,7 +116,7 @@ const estilos = StyleSheet.create({
   chipTextoAtivo: { fontSize: 14, fontWeight: '800', color: cores.primariaEscura },
   horarioDestaque: { color: '#88BDB7', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
   linhaTituloDestaque: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: -4, gap: espaco.sm },
-  tituloDestaque: { fontSize: 28, fontWeight: '800', color: cores.sobrePrimaria, flex: 1, marginRight: 4, lineHeight: 34, flexShrink: 1 },
+  tituloDestaque: { fontSize: 24, fontWeight: '800', color: cores.sobrePrimaria, flex: 1, marginRight: 4, lineHeight: 30, flexShrink: 1, minWidth: 0 },
   textoDestaque: { color: cores.sobrePrimaria, fontSize: 14, lineHeight: 22, marginTop: espaco.sm },
   statsContainer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: espaco.md, paddingBottom: espaco.sm, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.2)' },
   statLabel: { fontSize: 11, fontWeight: '800', color: '#88BDB7', letterSpacing: 0.5 },

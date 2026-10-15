@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-import { TextoAcessivel as Text, ViewAcessivel as View } from '../context/AcessibilidadeContext';
+import { TextoAcessivel as Text } from '../context/AcessibilidadeContext';
+import Icone from '../components/Icone';
 import { useAcessibilidade } from '../context/AcessibilidadeContext';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -20,26 +21,8 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function IconeAba({ tipo, focused, color }) {
-  return (
-    <View style={[estilos.iconeAbas, focused && estilos.iconeAbasAtivo]} importantForAccessibility="no-hide-descendants">
-      {tipo === 'inicio' && <View style={estilos.iconeCasa}>
-        <View style={[estilos.telhadinho, estilos.telhadinhoEsquerdo, { backgroundColor: color }]} />
-        <View style={[estilos.telhadinho, estilos.telhadinhoDireito, { backgroundColor: color }]} />
-        <View style={[estilos.corpoCasa, { borderColor: color }]}><View style={[estilos.portaCasa, { borderColor: color }]} /></View>
-      </View>}
-      {tipo === 'previsoes' && <View style={[estilos.iconeCalendario, { borderColor: color }]}>
-        <View style={[estilos.linhaCalendario, { backgroundColor: color }]} />
-        <View style={estilos.diasCalendario}>{[0, 1, 2, 3].map((dia) => <View key={dia} style={[estilos.diaCalendario, { backgroundColor: color }]} />)}</View>
-      </View>}
-      {tipo === 'planejar' && <View style={[estilos.iconeRelogio, { borderColor: color }]}>
-        <View style={[estilos.ponteiroHora, { backgroundColor: color }]} />
-        <View style={[estilos.ponteiroMinuto, { backgroundColor: color }]} />
-      </View>}
-      {tipo === 'entenda' && <View style={[estilos.iconeInfo, { borderColor: color }]}>
-        <Text style={[estilos.letraInfo, { color }]}>i</Text>
-      </View>}
-    </View>
-  );
+  const nomes = { inicio: 'home-outline', previsoes: 'calendar-outline', planejar: 'time-outline', entenda: 'information-circle-outline' };
+  return <Icone name={nomes[tipo]} size={24} color={color} />;
 }
 
 const icone = (tipo) => (props) => <IconeAba tipo={tipo} {...props} />;
@@ -74,23 +57,6 @@ const estilos = StyleSheet.create({
   },
   itemAba: { paddingVertical: 2 },
   rotuloAba: { fontSize: 11, fontWeight: '700', marginTop: 2 },
-  iconeAbas: { width: 42, height: 28, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
-  iconeAbasAtivo: { backgroundColor: '#EAF6F3' },
-  iconeCasa: { width: 22, height: 22, alignItems: 'center', justifyContent: 'flex-end' },
-  telhadinho: { position: 'absolute', top: 5, width: 12, height: 2, borderRadius: 1 },
-  telhadinhoEsquerdo: { left: 1, transform: [{ rotate: '-42deg' }] },
-  telhadinhoDireito: { right: 1, transform: [{ rotate: '42deg' }] },
-  corpoCasa: { width: 16, height: 12, borderWidth: 2, borderTopWidth: 0, borderRadius: 2, alignItems: 'center', justifyContent: 'flex-end' },
-  portaCasa: { width: 4, height: 6, borderWidth: 1.5, borderBottomWidth: 0, borderTopLeftRadius: 2, borderTopRightRadius: 2 },
-  iconeCalendario: { width: 19, height: 19, borderWidth: 2, borderRadius: 4, overflow: 'hidden', alignItems: 'center' },
-  linhaCalendario: { width: '100%', height: 2, marginTop: 5 },
-  diasCalendario: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 3, padding: 3 },
-  diaCalendario: { width: 3, height: 3, borderRadius: 1 },
-  iconeRelogio: { width: 19, height: 19, borderWidth: 2, borderRadius: 10 },
-  ponteiroHora: { position: 'absolute', width: 2, height: 6, top: 3, left: 7, borderRadius: 1 },
-  ponteiroMinuto: { position: 'absolute', width: 5, height: 2, top: 8, left: 8, borderRadius: 1 },
-  iconeInfo: { width: 19, height: 19, borderWidth: 2, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  letraInfo: { fontSize: 13, lineHeight: 16, fontWeight: '800' },
 });
 
 export default function AppNavigator() {
