@@ -73,7 +73,17 @@ export function TextoAcessivel({ style, ...props }) {
   const acessibilidade = useAcessibilidade();
   const original = StyleSheet.flatten(style) || {};
   const tamanho = original.fontSize || 16;
-  return <NativeText {...props} style={[style, estiloAcessivel(style, acessibilidade, 'text'), acessibilidade.textoAmpliado && { fontSize: tamanho * 1.18 }]} />;
+  const fontesPorPeso = {
+    '400': 'Inter_400Regular',
+    '600': 'Inter_600SemiBold',
+    '700': 'Inter_700Bold',
+    '800': 'Inter_800ExtraBold',
+    normal: 'Inter_400Regular',
+    bold: 'Inter_700Bold',
+  };
+  const familiaFonte = original.fontFamily || fontesPorPeso[String(original.fontWeight || '400')] || 'Inter_400Regular';
+  const pesoFonte = original.fontFamily ? null : { fontFamily: familiaFonte, fontWeight: 'normal' };
+  return <NativeText {...props} style={[{ fontFamily: familiaFonte }, style, estiloAcessivel(style, acessibilidade, 'text'), pesoFonte, acessibilidade.textoAmpliado && { fontSize: tamanho * 1.18 }]} />;
 }
 
 export function ViewAcessivel({ style, ...props }) {

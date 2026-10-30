@@ -25,6 +25,8 @@ incorporadas ao app; nunca coloque segredos nelas.
 2. `GET /api/v1/locations` carrega probes disponíveis. `probeId` identifica a
    probe e `location.latitude` / `location.longitude` são coordenadas públicas
    aproximadas, não a localização exata do usuário. A API não retorna IPs das probes.
+   Quando a localização do aparelho é autorizada, o app compara essas coordenadas
+   no próprio dispositivo e envia à API somente as coordenadas da probe selecionada.
 3. `GET /api/v1/forecasts/nearby?lat=...&lon=...&model_id=...` retorna a previsão
    da probe disponível mais próxima para aquele modelo. O app lê qualidade em
    `assessment.quality`, métricas em `prediction` e distância em `matchedProbe`.
@@ -50,3 +52,5 @@ Atividades aceitas: `VIDEO_CALL`, `AUDIO_CALL`, `STREAMING`, `FILE_UPLOAD`,
 `GET /api/v1/health` pode ser usado para conferir se o serviço está ativo. Para
 Expo Web, o servidor precisa permitir a origem do app por CORS. O app não precisa
 de chave privada para os endpoints documentados.
+
+GAMES não faz parte do contrato atual. Para jogos online, o app consulta a previsão de proximidade e aplica localmente a exigência definida para essa atividade; não envia à API um tipo que ela não documenta.

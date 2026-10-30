@@ -79,7 +79,7 @@ export default function ResultadoScreen({ navigation, route }) {
             <Icone name="shield-checkmark-outline" size={23} color={cores.primaria} style={estilos.iconeInfo} />
             <View style={estilos.textoDetalheContainer}>
               <Text style={estilos.tituloDetalheInfo}>Sua Privacidade é Preservada</Text>
-              <Text style={estilos.descDetalheInfo}>Esta demonstração não solicita localização, identidade ou histórico de navegação. A etapa de permissão será conectada depois.</Text>
+              <Text style={estilos.descDetalheInfo}>Se você usar a localização do aparelho, as coordenadas são comparadas aqui com as probes públicas. A API recebe apenas as coordenadas aproximadas da probe selecionada.</Text>
             </View>
           </View>
           <View style={estilos.itemInfoBasico}>

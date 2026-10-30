@@ -39,7 +39,7 @@ export const ATIVIDADES = [
 
 export const ADEQUACOES = {
   adequada: { id: 'adequada', rotulo: 'Adequada', simbolo: '✓', cor: 'boa' },
-  ressalvas: { id: 'ressalvas', rotulo: 'Com ressalvas', simbolo: '!', cor: 'regular' },
+  ressalvas: { id: 'ressalvas', rotulo: 'Com Ressalvas', simbolo: '!', cor: 'regular' },
   nao_recomendada: { id: 'nao_recomendada', rotulo: 'Não recomendada', simbolo: '✕', cor: 'instavel' },
 };
 

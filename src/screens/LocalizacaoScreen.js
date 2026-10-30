@@ -13,6 +13,42 @@ import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
 import Icone from '../components/Icone';
 
+const distanciaEmKm = (origem, destino) => {
+  const radianos = (graus) => (graus * Math.PI) / 180;
+  const diferencaLatitude = radianos(destino.latitude - origem.latitude);
+  const diferencaLongitude = radianos(destino.longitude - origem.longitude);
+  const a = Math.sin(diferencaLatitude / 2) ** 2
+    + Math.cos(radianos(origem.latitude))
+      * Math.cos(radianos(destino.latitude))
+      * Math.sin(diferencaLongitude / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const cidadesReferenciaBR = [
+  { nome: 'São Paulo', uf: 'SP', latitude: -23.5505, longitude: -46.6333 },
+  { nome: 'Rio de Janeiro', uf: 'RJ', latitude: -22.9068, longitude: -43.1729 },
+  { nome: 'Belo Horizonte', uf: 'MG', latitude: -19.9167, longitude: -43.9345 },
+  { nome: 'Brasília', uf: 'DF', latitude: -15.7975, longitude: -47.8919 },
+  { nome: 'Salvador', uf: 'BA', latitude: -12.9714, longitude: -38.5014 },
+  { nome: 'Recife', uf: 'PE', latitude: -8.0476, longitude: -34.8770 },
+  { nome: 'Fortaleza', uf: 'CE', latitude: -3.7172, longitude: -38.5434 },
+  { nome: 'Curitiba', uf: 'PR', latitude: -25.4284, longitude: -49.2733 },
+  { nome: 'Porto Alegre', uf: 'RS', latitude: -30.0346, longitude: -51.2177 },
+  { nome: 'Manaus', uf: 'AM', latitude: -3.1190, longitude: -60.0217 },
+];
+
+const obterCidadeReferencia = (probe) => {
+  if (probe?.countryCode !== 'BR') return null;
+  const maisProxima = cidadesReferenciaBR
+    .map((cidade) => ({ cidade, distancia: distanciaEmKm(probe.location, cidade) }))
+    .sort((a, b) => a.distancia - b.distancia)[0];
+  return maisProxima?.distancia <= 50 ? maisProxima.cidade : null;
+};
+
+const encontrarProbeMaisProxima = (coordenadas, probes) => probes
+  .filter((probe) => Number.isFinite(probe?.location?.latitude) && Number.isFinite(probe?.location?.longitude))
+  .map((probe) => ({ probe, distancia: distanciaEmKm(coordenadas, probe.location) }))
+  .sort((a, b) => a.distancia - b.distancia)[0]?.probe ?? null;
 const formatarCoordenada = (valor) => Number(valor).toLocaleString('pt-BR', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 4,
@@ -48,7 +84,7 @@ export default function LocalizacaoScreen({ navigation }) {
       if (permissao.status !== 'granted') {
         Alert.alert(
           'Localização não autorizada',
-          'Precisamos da sua localização para buscar automaticamente uma estação de referência. Você pode escolher uma região manualmente.',
+          'A permissão não foi concedida. Você pode escolher uma referência manualmente.',
           [
             { text: 'Agora não', style: 'cancel' },
             { text: 'Escolher outra cidade', onPress: abrirSelecaoManual },
@@ -57,22 +93,46 @@ export default function LocalizacaoScreen({ navigation }) {
         return;
       }
 
-      const posicao = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      if (!(await Location.hasServicesEnabledAsync())) {
+        Alert.alert(
+          'Localização desativada',
+          'Ative a localização do aparelho ou escolha uma referência manualmente.',
+          [
+            { text: 'Agora não', style: 'cancel' },
+            { text: 'Escolher outra cidade', onPress: abrirSelecaoManual },
+          ],
+        );
+        return;
+      }
+
+      let posicao = null;
+      try {
+        posicao = await Location.getLastKnownPositionAsync({ maxAge: 120000, requiredAccuracy: 10000 });
+      } catch {
+        posicao = null;
+      }
+      if (!posicao) {
+        posicao = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      }
+
       const { latitude, longitude } = posicao.coords;
       if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
         throw new Error('O dispositivo retornou coordenadas inválidas.');
       }
 
-      setLocal({
-        probeId: null,
-        countryCode: null,
-        location: { latitude, longitude },
-        source: 'device',
-      });
+      const probeMaisProxima = encontrarProbeMaisProxima({ latitude, longitude }, locais);
+      if (!probeMaisProxima) {
+        Alert.alert(
+          'Referência indisponível',
+          'Não há referências válidas para comparar. Você pode escolher uma manualmente.',
+          [{ text: 'Escolher outra cidade', onPress: abrirSelecaoManual }],
+        );
+        return;
+      }
+
+      setLocal(probeMaisProxima);
       continuarParaInicio();
-    } catch (erro) {
+    } catch {
       Alert.alert(
         'Não foi possível obter sua localização',
         'Confira se a localização está ativada no dispositivo ou escolha uma região manualmente.',
@@ -92,7 +152,6 @@ export default function LocalizacaoScreen({ navigation }) {
     setLocal(escolhida);
     continuarParaInicio();
   }
-
   if (erroFontes) throw erroFontes;
   if (!fontesCarregadas) return null;
 
@@ -113,7 +172,7 @@ export default function LocalizacaoScreen({ navigation }) {
           <Text style={[estilos.overline, estilos.overlineManual]}>CONFIGURAÇÃO INICIAL • ETAPA 2 DE 2</Text>
           <Text style={estilos.tituloManual}>Escolher outra cidade</Text>
           <Text style={estilos.descricaoManual}>
-            Selecione uma estação disponível para a sua região. A API ainda não fornece nomes de municípios, então as opções são identificadas por coordenadas aproximadas.
+            A cidade indicada é uma referência aproximada calculada pelas coordenadas da estação. Confira a região e as coordenadas antes de escolher.
           </Text>
 
           <Text style={estilos.tituloLista}>Referências disponíveis</Text>
@@ -132,15 +191,20 @@ export default function LocalizacaoScreen({ navigation }) {
                 <Text style={estilos.textoTentarNovamente}>Tentar novamente</Text>
               </Pressable>
             </View>
-          ) : locais.map((probe) => (
-            <OpcaoSelecionavel
-              key={probe.probeId}
-              rotulo={`${probe.countryCode === 'BR' ? 'Brasil' : probe.countryCode} • referência regional`}
-              detalhe={`Latitude aproximada: ${formatarCoordenada(probe.location.latitude)}°\nLongitude aproximada: ${formatarCoordenada(probe.location.longitude)}°\nEstação: ${probe.probeId}`}
-              selecionado={probeSelecionada === probe.probeId}
-              onPress={() => setProbeSelecionada(probe.probeId)}
-            />
-          ))}
+          ) : locais.map((probe) => {
+            const cidade = obterCidadeReferencia(probe);
+            const pais = probe.countryCode === 'BR' ? 'Brasil' : probe.countryCode || 'País não informado';
+            const regiao = cidade ? `${cidade.nome} (${cidade.uf}), ${pais}` : pais;
+            return (
+              <OpcaoSelecionavel
+                key={probe.probeId}
+                rotulo={cidade ? `Perto de ${cidade.nome} (${cidade.uf})` : `${pais} • Referência Regional`}
+                detalhe={`Região Aprox.: ${regiao}\nLatitude Aprox.: ${formatarCoordenada(probe.location.latitude)}°\nLongitude Aprox.: ${formatarCoordenada(probe.location.longitude)}°\nProbe Pública: ${probe.probeId}`}
+                selecionado={probeSelecionada === probe.probeId}
+                onPress={() => setProbeSelecionada(probe.probeId)}
+              />
+            );
+          })}
           <BotaoPrincipal
             titulo="Usar esta referência"
             icone="map-outline"
@@ -187,9 +251,9 @@ export default function LocalizacaoScreen({ navigation }) {
                   <Icone name="location-outline" size={34} color="#042F2E" />
                 </View>
               </View>
-              <View style={estilos.tagUso} accessible accessibilityRole="text" accessibilityLabel="Uso pontual">
-                <Icone name="time-outline" size={14} color={cores.primaria} />
-                <Text style={estilos.textoTag}>Uso pontual</Text>
+              <View style={estilos.tagUso} accessible accessibilityRole="text" accessibilityLabel="Sem IP">
+                <Icone name="eye-off-outline" size={14} color={cores.primaria} />
+                <Text style={estilos.textoTag}>Sem IP</Text>
               </View>
             </View>
 
@@ -208,7 +272,7 @@ export default function LocalizacaoScreen({ navigation }) {
               </View>
               <View style={estilos.textoVantagem}>
                 <Text style={estilos.tituloVantagemDestaque}>Não usamos seu endereço IP</Text>
-                <Text style={estilos.descricaoVantagemDestaque}>A localização só é enviada à API ao buscar a previsão.</Text>
+                <Text style={estilos.descricaoVantagemDestaque}>O GPS é comparado neste aparelho. À API vai apenas a referência escolhida ao buscar a previsão.</Text>
               </View>
             </View>
 

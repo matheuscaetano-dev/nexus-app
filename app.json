@@ -10,11 +10,36 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Permita o acesso à localização para encontrar uma estação de referência próxima."
+          "locationWhenInUsePermission": "Permita que o Nexus use sua localização enquanto o app estiver aberto para encontrar a probe pública mais próxima."
         }
       ],
       "expo-status-bar",
-      "expo-font"
+      [
+        "expo-font",
+        {
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Inter",
+                "fontDefinitions": [
+                  { "path": "./node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf", "weight": 400 },
+                  { "path": "./node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf", "weight": 600 },
+                  { "path": "./node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf", "weight": 700 },
+                  { "path": "./node_modules/@expo-google-fonts/inter/800ExtraBold/Inter_800ExtraBold.ttf", "weight": 800 }
+                ]
+              }
+            ]
+          },
+          "ios": {
+            "fonts": [
+              "./node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf",
+              "./node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf",
+              "./node_modules/@expo-google-fonts/inter/700Bold/Inter_700Bold.ttf",
+              "./node_modules/@expo-google-fonts/inter/800ExtraBold/Inter_800ExtraBold.ttf"
+            ]
+          }
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true
@@ -23,10 +48,16 @@
       "adaptiveIcon": {
         "backgroundColor": "#EAF1F0",
         "foregroundImage": "./assets/android-icon-foreground.png"
-      }
+      },
+      "package": "com.m4th3usbr.appprevisaoconexao"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "977a461a-3f2c-43d0-a3b3-9182400b11e1"
+      }
     }
   }
 }

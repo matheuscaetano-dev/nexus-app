@@ -73,7 +73,7 @@ export default function TimelineScreen() {
           <Text style={estilos.tituloResultado}>Previsões</Text>
           {itens[0] && <BadgeNivel corId={itens[0].nivel.id} rotulo={itens[0].nivel.rotulo} simbolo={itens[0].nivel.simbolo} iconeEsquerda />}
         </View>
-        {consulta.carregando ? <EstadoCarregando mensagem="Buscando linha do tempo…" /> : consulta.erro ? <EstadoErro erro={consulta.erro} onTentarNovamente={consulta.recarregar} /> : itens.length ? itens.map((item) => <View key={item.dataHora.toISOString()} style={estilos.itemTimeline}>
+        {consulta.carregando ? <EstadoCarregando mensagem="Buscando linha do tempo…" /> : consulta.erro ? <EstadoErro erro={consulta.erro} onTentarNovamente={consulta.recarregar} /> : itens.length ? itens.map((item, index) => <View key={item.dataHora.getTime() + '-' + index} style={estilos.itemTimeline}>
           <Text style={estilos.horaTimeline}>{item.dataHora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</Text>
           <BadgeNivel corId={item.nivel.id} rotulo={item.nivel.rotulo} simbolo={item.nivel.simbolo} />
           <Text style={estilos.metricasTimeline}>{formatarMs(item.latenciaMs)} • {formatarPercentual(item.perdaPercentual)}</Text>

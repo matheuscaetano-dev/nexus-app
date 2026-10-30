@@ -66,17 +66,17 @@ export default function AppNavigator() {
       <Stack.Navigator initialRouteName="BoasVindas" screenOptions={{
         headerStyle: { backgroundColor: altoContraste ? '#000000' : cores.superficie },
         headerTintColor: altoContraste ? '#FFFFFF' : cores.primaria,
-        headerTitleStyle: { fontWeight: '700', color: altoContraste ? '#FFFFFF' : cores.texto },
+        headerTitleStyle: { fontFamily: 'Inter_700Bold', color: altoContraste ? '#FFFFFF' : cores.texto },
         headerShadowVisible: false,
         contentStyle: { backgroundColor: altoContraste ? '#000000' : cores.fundo },
       }}>
         <Stack.Screen name="BoasVindas" component={BoasVindasScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Abas" component={Abas} options={{ headerShown: false }} />
         <Stack.Screen name="Resultado" component={ResultadoScreen} options={{ title: 'Resultado', headerBackTitle: 'Voltar' }} />
-        <Stack.Screen name="EscolherModelo" component={EscolherModeloScreen} options={{ title: 'Escolher modelo' }} />
+        <Stack.Screen name="EscolherModelo" component={EscolherModeloScreen} options={{ title: 'Escolher Modelo' }} />
         <Stack.Screen name="Localizacao" component={LocalizacaoScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Timeline" component={TimelineScreen} options={{ title: 'Previsões' }} />
-        <Stack.Screen name="EstadosConexao" component={EstadosConexaoScreen} options={{ title: 'Estados de conexão' }} />
+        <Stack.Screen name="EstadosConexao" component={EstadosConexaoScreen} options={{ title: 'Estados de Conexão' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

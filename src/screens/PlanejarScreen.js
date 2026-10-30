@@ -6,10 +6,9 @@ import BadgeNivel from '../components/BadgeNivel';
 import BotaoPrincipal from '../components/BotaoPrincipal';
 import { EstadoCarregando, EstadoErro } from '../components/Estados';
 import useAsync from '../hooks/useAsync';
-import { ATIVIDADES } from '../domain/qualidade';
-import { verificarAtividade } from '../services/previsaoService';
+import { ATIVIDADES, avaliarAtividade } from '../domain/qualidade';
+import { obterPrevisao, verificarAtividade } from '../services/previsaoService';
 import { formatarMs, formatarPercentual } from '../utils/Formatadores';
-import { USAR_MOCK } from '../config';
 import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
 
@@ -27,22 +26,32 @@ export default function PlanejarScreen({ navigation }) {
   const atividade = ATIVIDADES.find((item) => item.id === atividadeId);
   const tiposApi = { video: 'VIDEO_CALL', audio: 'AUDIO_CALL', streaming: 'STREAMING', arquivos: 'FILE_UPLOAD', web: 'WEB_BROWSING', mensagens: 'MESSAGING' };
   const atividadeApi = tiposApi[atividadeId];
-  const resultado = useAsync(() => modelo && local && atividadeApi
-    ? verificarAtividade({ local, modelo, dataHora: horario, atividade: atividadeApi })
-    : Promise.resolve(null), [horario.getTime(), modelo?.id, local?.probeId, atividadeId]);
+  const resultado = useAsync(() => {
+    if (!modelo || !local || !atividade) return Promise.resolve(null);
+    if (atividadeApi) return verificarAtividade({ local, modelo, dataHora: horario, atividade: atividadeApi });
+
+    return obterPrevisao(horario, local, modelo).then((dadosPrevisao) => {
+      const avaliacaoLocal = avaliarAtividade(dadosPrevisao.nivel, atividade);
+      return {
+        previsao: dadosPrevisao,
+        adequacao: avaliacaoLocal.adequacao,
+        suitable: avaliacaoLocal.adequacao.id !== 'nao_recomendada',
+        recommendation: { message: avaliacaoLocal.frase },
+      };
+    });
+  }, [horario.getTime(), modelo?.id, local?.probeId, atividadeId]);
   const previsao = { ...resultado, dados: resultado.dados?.previsao || null };
   const avaliacao = resultado.dados ? {
-    adequacao: resultado.dados.suitable
+    adequacao: resultado.dados.adequacao || (resultado.dados.suitable
       ? { rotulo: 'Adequada', cor: 'boa', simbolo: '✓' }
-      : { rotulo: 'Não Recomendada', cor: 'instavel', simbolo: '✕' },
+      : { rotulo: 'Não Recomendada', cor: 'instavel', simbolo: '✕' }),
     frase: resultado.dados.recommendation?.message || 'Confira a qualidade prevista antes de iniciar.',
   } : null;
-  const atividadesVisiveis = USAR_MOCK ? ATIVIDADES : ATIVIDADES.filter((item) => item.id !== 'jogos');
 
   return (
     <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
       <View style={estilos.cabecalho}>
-        <Text style={estilos.overline}>API / ACTIVITY CHECK</Text>
+        <Text style={estilos.overline}>PLANEJAMENTO POR ATIVIDADE</Text>
         <Text style={estilos.tituloGigante}>Planejamento por Atividade</Text>
       </View>
 
@@ -62,7 +71,7 @@ export default function PlanejarScreen({ navigation }) {
 
       <Text style={estilos.tituloSecao}>ATIVIDADE</Text>
       <View style={estilos.chipsContainer}>
-        {atividadesVisiveis.map((item) => <Pressable key={item.id} accessibilityRole="radio" accessibilityState={{ checked: atividadeId === item.id }} onPress={() => setAtividadeId(item.id)} style={[estilos.chip, atividadeId === item.id && estilos.chipAtivo]}>
+        {ATIVIDADES.map((item) => <Pressable key={item.id} accessibilityRole="radio" accessibilityState={{ checked: atividadeId === item.id }} onPress={() => setAtividadeId(item.id)} style={[estilos.chip, atividadeId === item.id && estilos.chipAtivo]}>
           <Text style={atividadeId === item.id ? estilos.chipTextoAtivo : estilos.chipTexto}>{capitalizarPalavras(item.nome)}</Text>
         </Pressable>)}
       </View>
@@ -70,7 +79,9 @@ export default function PlanejarScreen({ navigation }) {
       {!modelo || !local ? <Cartao>
         <Text style={estilos.textoCorpo}>Escolha primeiro um modelo e uma referência aproximada para consultar a API.</Text>
         <BotaoPrincipal titulo="Configurar previsão" onPress={() => navigation.navigate('EscolherModelo')} />
-      </Cartao> : previsao.carregando ? <EstadoCarregando /> : previsao.erro ? <EstadoErro erro={previsao.erro} onTentarNovamente={previsao.recarregar} /> : (
+      </Cartao> : previsao.carregando ? <EstadoCarregando /> : previsao.erro ? <EstadoErro erro={previsao.erro} onTentarNovamente={previsao.recarregar} /> : !previsao.dados || !avaliacao ? <Cartao>
+        <Text style={estilos.textoCorpo}>Ainda não há uma previsão disponível para esta atividade.</Text>
+      </Cartao> : (
       <Cartao variante="destaque" style={{ backgroundColor: '#0E5B63', borderColor: '#0E5B63', marginTop: espaco.xl }}>
         <Text style={estilos.horarioDestaque}>{atividade?.nome.toUpperCase()} • PREVISÃO ATUAL</Text>
         <View style={estilos.linhaTituloDestaque}>
@@ -109,11 +120,11 @@ const estilos = StyleSheet.create({
   infoLabel: { fontSize: 11, fontWeight: '800', color: cores.textoSecundario, letterSpacing: 0.5 },
   infoValor: { fontSize: 16, fontWeight: '800', color: cores.texto },
   tituloSecao: { fontSize: 12, fontWeight: '800', color: cores.textoSecundario, letterSpacing: 0.5, marginBottom: espaco.md },
-  chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { backgroundColor: cores.superficie, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 999, borderWidth: 1, borderColor: cores.divisor },
+  chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: espaco.sm },
+  chip: { width: '48%', minHeight: 68, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.superficie, paddingVertical: 12, paddingHorizontal: 10, borderRadius: raio.lg, borderWidth: 1, borderColor: cores.divisor },
   chipAtivo: { backgroundColor: '#EAF6F3', borderColor: cores.primaria },
-  chipTexto: { fontSize: 14, fontWeight: '700', color: cores.textoSecundario },
-  chipTextoAtivo: { fontSize: 14, fontWeight: '800', color: cores.primariaEscura },
+  chipTexto: { fontSize: 14, lineHeight: 18, fontWeight: '700', color: cores.textoSecundario, textAlign: 'center' },
+  chipTextoAtivo: { fontSize: 14, lineHeight: 18, fontWeight: '800', color: cores.primariaEscura, textAlign: 'center' },
   horarioDestaque: { color: '#88BDB7', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
   linhaTituloDestaque: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: -4, gap: espaco.sm },
   tituloDestaque: { fontSize: 24, fontWeight: '800', color: cores.sobrePrimaria, flex: 1, marginRight: 4, lineHeight: 30, flexShrink: 1, minWidth: 0 },
@@ -123,5 +134,5 @@ const estilos = StyleSheet.create({
   statValue: { fontSize: 16, fontWeight: '800', color: cores.sobrePrimaria },
   dicaCaixa: { marginTop: espaco.sm },
   dicaTextoTopo: { fontSize: 11, fontWeight: '800', color: '#F5B84E', letterSpacing: 0.5, marginBottom: 4 },
-  dicaTexto: { color: cores.sobrePrimaria, fontSize: 13, lineHeight: 18 }
+  dicaTexto: { color: cores.sobrePrimaria, fontSize: 13, lineHeight: 18 },
 });

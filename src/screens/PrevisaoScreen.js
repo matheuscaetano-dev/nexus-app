@@ -65,7 +65,7 @@ export default function PrevisaoScreen({ navigation }) {
               {proximas.dados.map((p, i) => {
                 const cor = p.nivel.id === 'boa' ? cores.sucessoTexto : p.nivel.id === 'regular' ? cores.avisoTexto : cores.erroTexto;
                 const altura = 38 + (p.nivel.pontos * 24);
-                return <View key={p.dataHora.getTime()} style={estilos.barraItem} accessible accessibilityLabel={`${p.dataHora.getHours()} horas: ${p.nivel.rotulo}`}>
+                return <View key={p.dataHora.getTime() + '-' + i} style={estilos.barraItem} accessible accessibilityLabel={`${p.dataHora.getHours()} horas: ${p.nivel.rotulo}`}>
                   <View style={[estilos.barra, { height: altura, backgroundColor: cor }]} />
                   <Text style={estilos.barraHora}>{i === 0 ? 'Agora' : `${p.dataHora.getHours()}h`}</Text>
                 </View>;
@@ -76,11 +76,21 @@ export default function PrevisaoScreen({ navigation }) {
         )}
       </View>
 
-      <Pressable onPress={() => navigation.navigate('Localizacao')} style={estilos.avisoLocalizacao}>
+      <Pressable
+        onPress={() => navigation.navigate('Localizacao')}
+        accessibilityRole="button"
+        accessibilityLabel={'Alterar referência da probe ' + (local?.probeId ?? 'não selecionada')}
+        accessibilityHint="Abre as opções de referência regional."
+        style={estilos.avisoLocalizacao}
+      >
         <Icone name="location-outline" size={21} color={cores.primaria} style={estilos.iconeAviso} />
         <View style={{ flex: 1 }}>
-          <Text style={estilos.tituloAvisoLocalizacao}>Referência atual: probe {local?.probeId ?? 'não selecionada'}</Text>
-          <Text style={estilos.textoAvisoLocalizacao}>Usamos uma localização pública aproximada para buscar a previsão mais próxima. Toque para trocar.</Text>
+          <Text style={estilos.tituloAvisoLocalizacao}>Referência atual: {'probe\u00A0' + (local?.probeId ?? 'não selecionada')}</Text>
+          <Text style={estilos.textoAvisoLocalizacao}>Toque para escolher outra referência regional.</Text>
+        </View>
+        <View style={estilos.acaoAvisoLocalizacao}>
+          <Text style={estilos.textoAcaoAvisoLocalizacao}>Alterar</Text>
+          <Icone name="chevron-forward" size={17} color={cores.primaria} />
         </View>
       </Pressable>
     </ScrollView>
@@ -109,13 +119,15 @@ const estilos = StyleSheet.create({
   linhaHeaderSecao: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: espaco.md },
   tituloSecao: { fontSize: 18, fontWeight: '800', color: cores.texto },
   linkVerTudo: { color: cores.primaria, fontWeight: '700', fontSize: 14 },
-  graficoContainer: { backgroundColor: cores.superficie, padding: espaco.lg, borderRadius: raio.xl, borderWidth: 1, borderColor: cores.divisor },
-  barrasFake: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 120, borderBottomWidth: 1, borderBottomColor: cores.divisor, paddingBottom: 8 },
-  barraItem: { alignItems: 'center', flex: 1, minWidth: 42 },
+  graficoContainer: { width: '100%', minWidth: 0, overflow: 'hidden', backgroundColor: cores.superficie, padding: espaco.lg, borderRadius: raio.xl, borderWidth: 1, borderColor: cores.divisor },
+  barrasFake: { width: '100%', minWidth: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 148, borderBottomWidth: 1, borderBottomColor: cores.divisor, paddingBottom: 8 },
+  barraItem: { alignItems: 'center', flex: 1, minWidth: 0 },
   barra: { width: 24, borderRadius: 4, marginBottom: 8 },
-  barraHora: { fontSize: 12, color: cores.textoSecundario, fontWeight: '600' },
+  barraHora: { fontSize: 12, lineHeight: 16, color: cores.textoSecundario, fontWeight: '600', textAlign: 'center', flexShrink: 1 },
   legendaGrafico: { fontSize: 12, color: cores.textoSecundario, textAlign: 'center', marginTop: 12, lineHeight: 18 },
-  avisoLocalizacao: { flexDirection: 'row', gap: 12, backgroundColor: cores.fundoSecundario, padding: espaco.lg, borderRadius: raio.xl, marginTop: espaco.xl },
+  avisoLocalizacao: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: cores.fundoSecundario, padding: espaco.lg, borderRadius: raio.xl, marginTop: espaco.xl, borderWidth: 1, borderColor: cores.primaria },
+  acaoAvisoLocalizacao: { flexDirection: 'row', alignItems: 'center', gap: 1, paddingVertical: 7, paddingHorizontal: 8, borderRadius: 999, backgroundColor: cores.superficie, borderWidth: 1, borderColor: cores.divisor },
+  textoAcaoAvisoLocalizacao: { color: cores.primaria, fontWeight: '800', fontSize: 12 },
   iconeAviso: { marginTop: 1 },
   tituloAvisoLocalizacao: { fontSize: 14, fontWeight: '700', color: cores.texto, marginBottom: 2 },
   textoAvisoLocalizacao: { fontSize: 13, color: cores.textoSecundario, lineHeight: 18 },

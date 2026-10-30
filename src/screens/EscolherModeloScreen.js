@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { PressableAcessivel as Pressable, ScrollViewAcessivel as ScrollView, TextoAcessivel as Text, ViewAcessivel as View } from '../context/AcessibilidadeContext';
 import BotaoPrincipal from '../components/BotaoPrincipal';
@@ -7,12 +7,37 @@ import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
 import Icone from '../components/Icone';
 
+const explicacoesAlgoritmo = {
+  'Linear Regression': {
+    nome: 'Regressão Linear',
+    explicacao: 'Em geral, estima uma tendência por meio de relações lineares entre os dados.',
+  },
+  'Random Forest': {
+    nome: 'Floresta Aleatória',
+    explicacao: 'Em geral, combina as estimativas de várias árvores de decisão.',
+  },
+  'Decision Tree': {
+    nome: 'Árvore de Decisão',
+    explicacao: 'Em geral, segue regras ramificadas para chegar a uma estimativa.',
+  },
+  'Gradient Boosting': {
+    nome: 'Gradient Boosting',
+    explicacao: 'Em geral, combina modelos em sequência para tentar reduzir erros anteriores.',
+  },
+  'Time Series': {
+    nome: 'Série Temporal',
+    explicacao: 'Em geral, procura padrões nos dados ao longo do tempo.',
+  },
+};
+
 function CartaoModelo({ item, selecionado, onPress }) {
+  const algoritmoInfo = explicacoesAlgoritmo[item.algorithm];
+  const resumoModelo = algoritmoInfo?.explicacao || item.description || 'A API não forneceu uma explicação para este modelo.';
   const metadados = [
-    item.groupName && `Grupo: ${item.groupName}`,
-    item.algorithm && `Algoritmo: ${item.algorithm}`,
+    item.groupName && 'Desenvolvido por: ' + item.groupName,
+    item.algorithm && 'Técnica: ' + (algoritmoInfo?.nome || item.algorithm),
   ].filter(Boolean);
-  const descricaoAcessivel = [item.name, item.description, ...metadados, `Versão ${item.version || 'não informada'}`].filter(Boolean).join('. ');
+  const descricaoAcessivel = [item.name, resumoModelo, ...metadados, `Versão ${item.version || 'não informada'}`].filter(Boolean).join('. ');
 
   return (
     <Pressable
@@ -29,7 +54,7 @@ function CartaoModelo({ item, selecionado, onPress }) {
         <Text style={[estilos.nomeModelo, selecionado && estilos.nomeModeloSelecionado]}>{item.name}</Text>
         <Text style={estilos.versaoModelo}>v{item.version || '—'}</Text>
       </View>
-      <Text style={estilos.descricaoModelo}>{item.description || 'A API não forneceu uma descrição para este modelo.'}</Text>
+      <Text style={estilos.descricaoModelo}>{resumoModelo}</Text>
       {metadados.length > 0 && (
         <View style={estilos.metadadosModelo}>
           {metadados.map((metadado) => <Text key={metadado} style={estilos.metadadoModelo}>{metadado}</Text>)}
@@ -43,9 +68,7 @@ export default function EscolherModeloScreen({ navigation }) {
   const { modelos, modelo, setModelo, carregandoCatalogo, erroCatalogo, recarregarCatalogo } = useConexao();
   const [selecionado, setSelecionado] = useState(modelo?.id || null);
 
-  useEffect(() => {
-    if (!selecionado && modelos.length) setSelecionado(modelos[0].id);
-  }, [selecionado, modelos]);
+
 
   return (
     <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
@@ -53,13 +76,13 @@ export default function EscolherModeloScreen({ navigation }) {
       <Text style={estilos.tituloGigante}>Escolher Modelo de Previsão</Text>
 
       <View style={estilos.boxInfo}>
-        <View style={estilos.boxTituloLinha}><Icone name="information-circle-outline" size={20} color={cores.primaria} /><Text style={estilos.boxTitulo}>Sobre os Modelos</Text></View>
-        <Text style={estilos.boxTexto}>A API fornece previsões previamente calculadas. O algoritmo é apenas metadado; a classificação de qualidade usa a mesma regra para todos. Não há um modelo declarado como superior.</Text>
+        <View style={estilos.boxTituloLinha}><Icone name="information-circle-outline" size={20} color={cores.primaria} /><Text style={estilos.boxTitulo}>Como Escolher?</Text></View>
+        <Text style={estilos.boxTexto}>Os cards resumem a técnica informada pela API. Ela fornece previsões já calculadas, mas não publica métricas de precisão para comparar os modelos; todos usam a mesma regra de classificação. Por isso, não há um melhor comprovado. Se não recebeu indicação específica, escolha uma opção; você pode mudar depois.</Text>
       </View>
 
       <View style={estilos.linhaModelos}>
-        <Text style={estilos.tituloSecao}>Modelos Disponíveis:</Text>
-        <Text style={estilos.subtituloSecao}>{modelos.length === 1 ? '1 modelo ativo' : `${modelos.length} modelos ativos`}</Text>
+        <Text style={estilos.tituloSecao}>Opções Disponíveis:</Text>
+        <Text style={estilos.subtituloSecao}>{modelos.length === 1 ? '1 opção' : `${modelos.length} opções`}</Text>
       </View>
 
       {carregandoCatalogo ? <EstadoCarregando mensagem="Buscando modelos e localidades…" /> : erroCatalogo ? <EstadoErro erro={erroCatalogo} onTentarNovamente={recarregarCatalogo} /> : modelos.map((item) => (
@@ -71,7 +94,7 @@ export default function EscolherModeloScreen({ navigation }) {
         />
       ))}
 
-      <Text style={estilos.notaRodape}>O identificador escolhido será enviado nas consultas de previsão. A API não define um modelo padrão.</Text>
+      <Text style={estilos.notaRodape}>Depois, você poderá trocar o modelo na tela inicial.</Text>
 
       <BotaoPrincipal titulo="Continuar →" desabilitado={!modelos.find((item) => item.id === selecionado) || carregandoCatalogo} onPress={() => {
         const escolhido = modelos.find((item) => item.id === selecionado);

@@ -1,4 +1,11 @@
 import React from 'react';
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+} from '@expo-google-fonts/inter';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import  AppNavigator  from './src/navigation/AppNavigator';
@@ -12,6 +19,14 @@ function BarraStatusAcessivel() {
 }
 
 export default function App() {
+  const [fontesCarregadas, erroFonte] = useFonts({
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+  });
+
+  if (!fontesCarregadas && !erroFonte) return null;
   return (
     <SafeAreaProvider>
       <ConexaoProvider>
