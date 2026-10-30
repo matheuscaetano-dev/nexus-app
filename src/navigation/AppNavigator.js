@@ -74,7 +74,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Abas" component={Abas} options={{ headerShown: false }} />
         <Stack.Screen name="Resultado" component={ResultadoScreen} options={{ title: 'Resultado', headerBackTitle: 'Voltar' }} />
         <Stack.Screen name="EscolherModelo" component={EscolherModeloScreen} options={{ title: 'Escolher modelo' }} />
-        <Stack.Screen name="Localizacao" component={LocalizacaoScreen} options={{ title: 'Sua localização' }} />
+        <Stack.Screen name="Localizacao" component={LocalizacaoScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Timeline" component={TimelineScreen} options={{ title: 'Previsões' }} />
         <Stack.Screen name="EstadosConexao" component={EstadosConexaoScreen} options={{ title: 'Estados de conexão' }} />
       </Stack.Navigator>

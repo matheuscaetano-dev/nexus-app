@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { ScrollViewAcessivel as ScrollView, TextoAcessivel as Text, ViewAcessivel as View } from '../context/AcessibilidadeContext';
+import { Alert, StyleSheet } from 'react-native';
+import * as Location from 'expo-location';
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { useFonts } from 'expo-font';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { PressableAcessivel as Pressable, ScrollViewAcessivel as ScrollView, TextoAcessivel as Text, ViewAcessivel as View } from '../context/AcessibilidadeContext';
 import BotaoPrincipal from '../components/BotaoPrincipal';
 import OpcaoSelecionavel from '../components/OpcaoSelecionavel';
 import { EstadoCarregando, EstadoErro } from '../components/Estados';
@@ -14,84 +19,419 @@ const formatarCoordenada = (valor) => Number(valor).toLocaleString('pt-BR', {
 });
 
 export default function LocalizacaoScreen({ navigation }) {
+  const [fontesCarregadas, erroFontes] = useFonts({ Inter_400Regular, Inter_700Bold });
   const { locais, local, setLocal, carregandoCatalogo, erroCatalogo, recarregarCatalogo } = useConexao();
   const [probeSelecionada, setProbeSelecionada] = useState(local?.probeId ?? null);
+  const [modoManual, setModoManual] = useState(false);
+  const [solicitandoLocalizacao, setSolicitandoLocalizacao] = useState(false);
+
   useEffect(() => {
-    if (probeSelecionada == null && locais.length) setProbeSelecionada(locais[0].probeId);
-  }, [probeSelecionada, locais]);
+    if (modoManual && probeSelecionada == null && locais.length) {
+      setProbeSelecionada(locais[0].probeId);
+    }
+  }, [modoManual, probeSelecionada, locais]);
+
+  function continuarParaInicio() {
+    navigation.navigate('Abas', { screen: 'Inicio' });
+  }
+
+  function abrirSelecaoManual() {
+    setModoManual(true);
+  }
+
+  async function permitirLocalizacao() {
+    if (solicitandoLocalizacao) return;
+    setSolicitandoLocalizacao(true);
+
+    try {
+      const permissao = await Location.requestForegroundPermissionsAsync();
+      if (permissao.status !== 'granted') {
+        Alert.alert(
+          'Localização não autorizada',
+          'Precisamos da sua localização para buscar automaticamente uma estação de referência. Você pode escolher uma região manualmente.',
+          [
+            { text: 'Agora não', style: 'cancel' },
+            { text: 'Escolher outra cidade', onPress: abrirSelecaoManual },
+          ],
+        );
+        return;
+      }
+
+      const posicao = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const { latitude, longitude } = posicao.coords;
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new Error('O dispositivo retornou coordenadas inválidas.');
+      }
+
+      setLocal({
+        probeId: null,
+        countryCode: null,
+        location: { latitude, longitude },
+        source: 'device',
+      });
+      continuarParaInicio();
+    } catch (erro) {
+      Alert.alert(
+        'Não foi possível obter sua localização',
+        'Confira se a localização está ativada no dispositivo ou escolha uma região manualmente.',
+        [
+          { text: 'Tentar novamente', onPress: permitirLocalizacao },
+          { text: 'Escolher outra cidade', onPress: abrirSelecaoManual },
+        ],
+      );
+    } finally {
+      setSolicitandoLocalizacao(false);
+    }
+  }
+
+  function confirmarReferenciaManual() {
+    const escolhida = locais.find((probe) => probe.probeId === probeSelecionada);
+    if (!escolhida) return;
+    setLocal(escolhida);
+    continuarParaInicio();
+  }
+
+  if (erroFontes) throw erroFontes;
+  if (!fontesCarregadas) return null;
+
+  if (modoManual) {
+    return (
+      <SafeAreaView style={estilos.safe} edges={['top', 'right', 'bottom', 'left']}>
+        <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudoManual} showsVerticalScrollIndicator={false}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Voltar para usar a localização do dispositivo"
+            onPress={() => setModoManual(false)}
+            style={estilos.voltar}
+          >
+            <Icone name="arrow-back" size={20} color={cores.primaria} />
+            <Text style={estilos.textoVoltar}>Usar minha localização</Text>
+          </Pressable>
+
+          <Text style={[estilos.overline, estilos.overlineManual]}>CONFIGURAÇÃO INICIAL • ETAPA 2 DE 2</Text>
+          <Text style={estilos.tituloManual}>Escolher outra cidade</Text>
+          <Text style={estilos.descricaoManual}>
+            Selecione uma estação disponível para a sua região. A API ainda não fornece nomes de municípios, então as opções são identificadas por coordenadas aproximadas.
+          </Text>
+
+          <Text style={estilos.tituloLista}>Referências disponíveis</Text>
+          {carregandoCatalogo ? (
+            <EstadoCarregando mensagem="Carregando referências disponíveis…" />
+          ) : erroCatalogo ? (
+            <EstadoErro erro={erroCatalogo} onTentarNovamente={recarregarCatalogo} />
+          ) : locais.length === 0 ? (
+            <View style={estilos.semReferencias}>
+              <Text style={estilos.textoSemReferencias}>Nenhuma estação de referência disponível no momento.</Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={recarregarCatalogo}
+                style={estilos.tentarNovamente}
+              >
+                <Text style={estilos.textoTentarNovamente}>Tentar novamente</Text>
+              </Pressable>
+            </View>
+          ) : locais.map((probe) => (
+            <OpcaoSelecionavel
+              key={probe.probeId}
+              rotulo={`${probe.countryCode === 'BR' ? 'Brasil' : probe.countryCode} • referência regional`}
+              detalhe={`Latitude aproximada: ${formatarCoordenada(probe.location.latitude)}°\nLongitude aproximada: ${formatarCoordenada(probe.location.longitude)}°\nEstação: ${probe.probeId}`}
+              selecionado={probeSelecionada === probe.probeId}
+              onPress={() => setProbeSelecionada(probe.probeId)}
+            />
+          ))}
+          <BotaoPrincipal
+            titulo="Usar esta referência"
+            icone="map-outline"
+            desabilitado={probeSelecionada == null || carregandoCatalogo || !!erroCatalogo}
+            onPress={confirmarReferenciaManual}
+            estiloContexto={estilos.botaoManual}
+          />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo}>
-      <Text style={estilos.overline}>CONFIGURAÇÃO INICIAL - ETAPA 2 DE 2</Text>
-      <Text style={estilos.tituloGigante}>Escolher Referência Regional</Text>
+    <SafeAreaView style={estilos.safe} edges={['top', 'right', 'bottom', 'left']}>
+      <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo} showsVerticalScrollIndicator={false}>
+        <View style={estilos.conteudoPrincipal}>
+          <View style={estilos.cabecalho}>
+            <View style={estilos.titulosCabecalho}>
+              <Text style={estilos.overline}>CONFIGURAÇÃO INICIAL • ETAPA 2 DE 2</Text>
+              <Text accessibilityRole="header" style={estilos.tituloCabecalho}>Usar sua localização</Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Ajuda sobre localização"
+              onPress={() => navigation.navigate('Abas', { screen: 'Entenda' })}
+              style={estilos.botaoAjuda}
+            >
+              <Icone name="help-circle-outline" size={18} color={cores.primaria} />
+            </Pressable>
+          </View>
 
-      <View style={estilos.ilustracaoContainer}>
-        <View style={estilos.ilustracaoBox}>
-          <Icone name="location" size={48} color={cores.primaria} />
-        </View>
-      </View>
+          <View style={estilos.blocoDesign}>
+            <View
+              style={estilos.ilustracao}
+              accessible
+              accessibilityRole="image"
+              accessibilityLabel="Ilustração de um marcador de localização"
+            >
+              <View style={estilos.orbita} />
+              <View style={estilos.pontoAmarelo} />
+              <View style={estilos.pontoVerde} />
+              <View style={estilos.marcadorExterno}>
+                <View style={estilos.marcadorInterno}>
+                  <Icone name="location-outline" size={34} color="#042F2E" />
+                </View>
+              </View>
+              <View style={estilos.tagUso} accessible accessibilityRole="text" accessibilityLabel="Uso pontual">
+                <Icone name="time-outline" size={14} color={cores.primaria} />
+                <Text style={estilos.textoTag}>Uso pontual</Text>
+              </View>
+            </View>
 
-      <Text style={estilos.tituloCentro}>Encontre uma Referência Perto de Você</Text>
-      <Text style={estilos.textoCentro}>A API não fornece nomes de cidades para essas probes. Escolha uma referência pelo país e pelas coordenadas aproximadas; elas não representam seu endereço ou localização exata.</Text>
+            <View style={estilos.introducao}>
+              <Text accessibilityRole="header" style={estilos.titulo}>
+                Encontre uma referência perto de você
+              </Text>
+              <Text style={estilos.descricao}>
+                Com sua permissão, usamos latitude e longitude somente para localizar uma estação de referência próxima.
+              </Text>
+            </View>
 
-      <View style={estilos.listaVantagens}>
-        <View style={estilos.itemVantagem}>
-          <Icone name="shield-checkmark-outline" size={24} color={cores.primaria} style={estilos.iconeVantagem} />
-          <View style={{flex:1}}>
-            <Text style={estilos.tituloVantagem}>A probe é a Referência</Text>
-            <Text style={estilos.textoVantagem}>A API não retorna o endereço IP das probes.</Text>
+            <View style={estilos.itemVantagemDestaque}>
+              <View style={[estilos.iconeFundo, estilos.iconeDestaque]}>
+                <Icone name="shield-checkmark-outline" size={20} color="#115E59" />
+              </View>
+              <View style={estilos.textoVantagem}>
+                <Text style={estilos.tituloVantagemDestaque}>Não usamos seu endereço IP</Text>
+                <Text style={estilos.descricaoVantagemDestaque}>A localização só é enviada à API ao buscar a previsão.</Text>
+              </View>
+            </View>
+
+            <View style={estilos.listaVantagens}>
+              <View style={estilos.itemVantagem}>
+                <View style={estilos.iconeFundo}>
+                  <Icone name="radio-outline" size={20} color="#115E59" />
+                </View>
+                <View style={estilos.textoVantagem}>
+                  <Text style={estilos.tituloVantagem}>Referência regional</Text>
+                  <Text style={estilos.descricaoVantagem}>A estação próxima serve como base para a consulta de previsão.</Text>
+                </View>
+              </View>
+              <View style={estilos.itemVantagem}>
+                <View style={estilos.iconeFundo}>
+                  <Icone name="sparkles-outline" size={20} color="#115E59" />
+                </View>
+                <View style={estilos.textoVantagem}>
+                  <Text style={estilos.tituloVantagem}>É uma estimativa</Text>
+                  <Text style={estilos.descricaoVantagem}>O resultado não é uma medição direta da rede ou do aparelho do usuário.</Text>
+                </View>
+              </View>
+            </View>
           </View>
         </View>
-        <View style={estilos.itemVantagem}>
-          <Icone name="radio-outline" size={24} color={cores.primaria} style={estilos.iconeVantagem} />
-          <View style={{flex:1}}>
-            <Text style={estilos.tituloVantagem}>Referência Regional</Text>
-            <Text style={estilos.textoVantagem}>A estação próxima serve como base para a consulta de previsão.</Text>
-          </View>
-        </View>
-        <View style={estilos.itemVantagem}>
-          <Icone name="stats-chart-outline" size={24} color={cores.primaria} style={estilos.iconeVantagem} />
-          <View style={{flex:1}}>
-            <Text style={estilos.tituloVantagem}>É uma Estimativa</Text>
-            <Text style={estilos.textoVantagem}>O resultado não é uma medição direta da rede ou do aparelho do usuário.</Text>
-          </View>
-        </View>
-      </View>
 
-      <Text style={estilos.tituloVantagem}>Localidades Disponíveis:</Text>
-      {carregandoCatalogo ? <EstadoCarregando mensagem="Carregando probes disponíveis…" /> : erroCatalogo ? <EstadoErro erro={erroCatalogo} onTentarNovamente={recarregarCatalogo} /> : locais.map((probe) => (
-        <OpcaoSelecionavel
-          key={probe.probeId}
-          rotulo={`${probe.countryCode === 'BR' ? 'Brasil' : probe.countryCode} • referência regional`}
-          detalhe={`Latitude aproximada: ${formatarCoordenada(probe.location.latitude)}°\nLongitude aproximada: ${formatarCoordenada(probe.location.longitude)}°\nProbe pública: ${probe.probeId}`}
-          selecionado={probeSelecionada === probe.probeId}
-          onPress={() => setProbeSelecionada(probe.probeId)}
-        />
-      ))}
-      <BotaoPrincipal titulo="Usar esta Referência →" desabilitado={probeSelecionada == null || carregandoCatalogo} onPress={() => {
-        const escolhida = locais.find((probe) => probe.probeId === probeSelecionada);
-        if (!escolhida) return;
-        setLocal(escolhida);
-        navigation.navigate('Abas', { screen: 'Inicio' });
-      }} estiloContexto={{marginTop: espaco.lg}} />
-      <Text style={estilos.notaRodape}>Você pode trocar a referência a qualquer momento. A escolha fica na memória durante esta sessão.</Text>
-    </ScrollView>
+        <View style={estilos.rodape}>
+          <View style={estilos.indicadorEtapa} accessibilityLabel="Etapa 2 de 2">
+            <View style={estilos.pontoInativo} />
+            <View style={estilos.pontoAtivo} />
+          </View>
+
+          <View style={estilos.acoes}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={solicitandoLocalizacao ? 'Buscando localização' : 'Permitir localização'}
+              accessibilityState={{ disabled: solicitandoLocalizacao }}
+              disabled={solicitandoLocalizacao}
+              onPress={permitirLocalizacao}
+              style={({ pressed }) => [estilos.botaoLocalizacao, pressed && estilos.botaoPressionado, solicitandoLocalizacao && estilos.botaoDesabilitado]}
+            >
+              <Icone name="locate-outline" size={18} color={cores.sobrePrimaria} />
+              <Text style={estilos.textoBotaoPrimario}>
+                {solicitandoLocalizacao ? 'Buscando localização…' : 'Permitir localização'}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Escolher outra cidade"
+              onPress={abrirSelecaoManual}
+              style={({ pressed }) => [estilos.botaoCidade, pressed && estilos.botaoPressionado]}
+            >
+              <Icone name="map-outline" size={18} color={cores.primaria} />
+              <Text style={estilos.textoBotaoSecundario}>Escolher outra cidade</Text>
+            </Pressable>
+          </View>
+
+          <Text style={estilos.notaRodape}>Você pode alterar essa escolha depois.</Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const estilos = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: cores.fundo },
-  conteudo: { padding: espaco.xl, paddingTop: espaco.xl + espaco.sm, paddingBottom: espaco.xxl * 2 },
-  overline: { fontSize: 11, fontWeight: '800', color: cores.primaria, letterSpacing: 0.5, marginBottom: 4 },
-  tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, marginBottom: espaco.xl },
-  ilustracaoContainer: { alignItems: 'center', marginBottom: espaco.xl },
-  ilustracaoBox: { width: 100, height: 100, borderRadius: 24, backgroundColor: cores.fundoSecundario, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: cores.borda },
-  tituloCentro: { fontSize: 24, fontWeight: '800', color: cores.texto, textAlign: 'center', marginBottom: espaco.sm },
-  textoCentro: { fontSize: 14, color: cores.textoSecundario, textAlign: 'center', lineHeight: 22, paddingHorizontal: espaco.lg, marginBottom: espaco.xl },
-  listaVantagens: { gap: espaco.lg, marginBottom: espaco.xxl },
-  itemVantagem: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco.md },
-  iconeVantagem: { width: 28, marginTop: 1 },
-  tituloVantagem: { fontSize: 15, fontWeight: '800', color: cores.texto, marginBottom: 2 },
-  textoVantagem: { fontSize: 13, color: cores.textoSecundario, lineHeight: 18 },
-  notaRodape: { fontSize: 12, color: cores.textoSecundario, textAlign: 'center', marginTop: espaco.lg }
+  safe: { flex: 1, backgroundColor: '#F4F8F7' },
+  tela: { flex: 1, backgroundColor: '#F4F8F7' },
+  conteudo: {
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 6,
+    paddingBottom: 22,
+  },
+  conteudoPrincipal: { alignSelf: 'stretch' },
+  rodape: { alignSelf: 'stretch', alignItems: 'center', gap: 10 },
+  conteudoManual: { padding: espaco.xl, paddingTop: espaco.lg, paddingBottom: espaco.xxl * 2, flexGrow: 1 },
+  cabecalho: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  titulosCabecalho: { flex: 1 },
+  overline: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#115E59',
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  overlineManual: { fontSize: 11, letterSpacing: 0.6, marginBottom: espaco.xs },
+  tituloCabecalho: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#042F2E',
+    lineHeight: 24,
+  },
+  botaoAjuda: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EAF6F3', marginLeft: espaco.sm },
+  blocoDesign: { alignSelf: 'stretch', gap: 14, overflow: 'hidden' },
+  ilustracao: {
+    width: '100%',
+    height: 174,
+    borderRadius: 24,
+    backgroundColor: '#EDF7F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  orbita: {
+    position: 'absolute',
+    width: 144,
+    height: 144,
+    borderRadius: 72,
+    borderWidth: 2,
+    borderColor: '#C8D9D8',
+    borderStyle: 'dashed',
+  },
+  pontoAmarelo: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    left: 57,
+    top: 42,
+    borderRadius: 6,
+    backgroundColor: '#F5B942',
+  },
+  pontoVerde: {
+    position: 'absolute',
+    width: 12,
+    height: 12,
+    left: 280,
+    top: 117,
+    borderRadius: 6,
+    backgroundColor: '#075E66',
+  },
+  marcadorExterno: {
+    width: 86,
+    height: 86,
+    borderRadius: 24,
+    backgroundColor: '#075E66',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    transform: [{ rotate: '-4deg' }],
+  },
+  marcadorInterno: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    backgroundColor: '#F5B942',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    transform: [{ rotate: '4deg' }],
+  },
+  tagUso: { position: 'absolute', top: 16, right: 16, minHeight: 30, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, backgroundColor: '#FFFFFF', borderRadius: 999, overflow: 'hidden' },
+  textoTag: { fontFamily: 'Inter_700Bold', fontSize: 12, fontWeight: '700', color: '#042F2E' },
+  introducao: { alignItems: 'center', gap: 6, overflow: 'hidden' },
+  titulo: {
+    alignSelf: 'stretch',
+    fontFamily: 'Inter_700Bold',
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#102A2E',
+    lineHeight: 29.1,
+    textAlign: 'center',
+  },
+  descricao: {
+    alignSelf: 'stretch',
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#4C6467',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  listaVantagens: { alignSelf: 'stretch', paddingHorizontal: 2, gap: 2, overflow: 'hidden' },
+  itemVantagem: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    overflow: 'hidden',
+  },
+  itemVantagemDestaque: {
+    alignSelf: 'stretch',
+    minHeight: 72,
+    padding: 13,
+    backgroundColor: '#E1F3EA',
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    overflow: 'hidden',
+  },
+  iconeFundo: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#EDF7F6', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  iconeDestaque: { width: 36, height: 36, borderRadius: 999, backgroundColor: '#FFFFFF' },
+  textoVantagem: { flex: 1 },
+  tituloVantagemDestaque: { alignSelf: 'stretch', fontFamily: 'Inter_700Bold', fontSize: 14, fontWeight: '700', color: '#1D6B4F' },
+  descricaoVantagemDestaque: { alignSelf: 'stretch', fontFamily: 'Inter_400Regular', fontSize: 12, fontWeight: '400', color: '#102A2E', lineHeight: 16.2 },
+  tituloVantagem: { alignSelf: 'stretch', fontFamily: 'Inter_700Bold', fontSize: 14, fontWeight: '700', color: '#102A2E' },
+  descricaoVantagem: { alignSelf: 'stretch', fontFamily: 'Inter_400Regular', fontSize: 12, fontWeight: '400', color: '#4C6467', lineHeight: 16.2 },
+  indicadorEtapa: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 0, marginBottom: 0 },
+  pontoInativo: { width: 7, height: 7, borderRadius: 999, backgroundColor: '#C8D9D8' },
+  pontoAtivo: { width: 22, height: 7, borderRadius: 999, backgroundColor: '#075E66' },
+  acoes: { gap: 10, marginTop: 0 },
+  botaoLocalizacao: { minHeight: 52, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#075E66', paddingHorizontal: 18, paddingVertical: 14, borderWidth: 1.5, borderColor: '#075E66' },
+  textoBotaoPrimario: { fontFamily: 'Inter_700Bold', color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  botaoCidade: { minHeight: 52, borderRadius: 12, borderWidth: 1.5, borderColor: '#075E66', backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 14 },
+  textoBotaoSecundario: { fontFamily: 'Inter_700Bold', color: '#075E66', fontSize: 16, fontWeight: '700' },
+  botaoPressionado: { opacity: 0.82 },
+  botaoDesabilitado: { opacity: 0.55 },
+  notaRodape: { alignSelf: 'stretch', marginTop: 0, fontFamily: 'Inter_400Regular', fontWeight: '400', fontSize: 11, lineHeight: 15.4, color: '#4C6467', textAlign: 'center' },
+  voltar: { minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: espaco.sm, marginBottom: espaco.lg },
+  textoVoltar: { color: cores.primaria, fontSize: 14, fontWeight: '700' },
+  tituloManual: { fontSize: 30, lineHeight: 36, fontWeight: '800', color: cores.texto, marginBottom: espaco.sm },
+  descricaoManual: { fontSize: 14, color: cores.textoSecundario, lineHeight: 21, marginBottom: espaco.xl },
+  tituloLista: { fontSize: 17, fontWeight: '800', color: cores.texto, marginBottom: espaco.md },
+  semReferencias: { padding: espaco.lg, borderRadius: raio.lg, backgroundColor: cores.superficie, alignItems: 'center', gap: espaco.sm },
+  textoSemReferencias: { color: cores.textoSecundario, fontSize: 14, textAlign: 'center' },
+  tentarNovamente: { minHeight: 44, justifyContent: 'center', paddingHorizontal: espaco.md },
+  textoTentarNovamente: { color: cores.primaria, fontSize: 14, fontWeight: '700' },
+  botaoManual: { marginTop: espaco.lg },
 });
