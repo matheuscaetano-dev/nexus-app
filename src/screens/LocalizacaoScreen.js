@@ -166,16 +166,16 @@ export default function LocalizacaoScreen({ navigation }) {
             style={estilos.voltar}
           >
             <Icone name="arrow-back" size={20} color={cores.primaria} />
-            <Text style={estilos.textoVoltar}>Usar minha localização</Text>
+            <Text style={estilos.textoVoltar}>Usar Minha Localização</Text>
           </Pressable>
 
           <Text style={[estilos.overline, estilos.overlineManual]}>CONFIGURAÇÃO INICIAL • ETAPA 2 DE 2</Text>
-          <Text style={estilos.tituloManual}>Escolher outra cidade</Text>
+          <Text style={estilos.tituloManual}>Escolher Outra Cidade</Text>
           <Text style={estilos.descricaoManual}>
             A cidade indicada é uma referência aproximada calculada pelas coordenadas da estação. Confira a região e as coordenadas antes de escolher.
           </Text>
 
-          <Text style={estilos.tituloLista}>Referências disponíveis</Text>
+          <Text style={estilos.tituloLista}>Referências Disponíveis</Text>
           {carregandoCatalogo ? (
             <EstadoCarregando mensagem="Carregando referências disponíveis…" />
           ) : erroCatalogo ? (
@@ -206,7 +206,7 @@ export default function LocalizacaoScreen({ navigation }) {
             );
           })}
           <BotaoPrincipal
-            titulo="Usar esta referência"
+            titulo="Usar Esta Referência"
             icone="map-outline"
             desabilitado={probeSelecionada == null || carregandoCatalogo || !!erroCatalogo}
             onPress={confirmarReferenciaManual}
@@ -224,7 +224,7 @@ export default function LocalizacaoScreen({ navigation }) {
           <View style={estilos.cabecalho}>
             <View style={estilos.titulosCabecalho}>
               <Text style={estilos.overline}>CONFIGURAÇÃO INICIAL • ETAPA 2 DE 2</Text>
-              <Text accessibilityRole="header" style={estilos.tituloCabecalho}>Usar sua localização</Text>
+              <Text accessibilityRole="header" style={estilos.tituloCabecalho}>Usar Sua Localização</Text>
             </View>
             <Pressable
               accessibilityRole="button"
@@ -259,7 +259,7 @@ export default function LocalizacaoScreen({ navigation }) {
 
             <View style={estilos.introducao}>
               <Text accessibilityRole="header" style={estilos.titulo}>
-                Encontre uma referência perto de você
+                Encontre uma Referência Perto de Você
               </Text>
               <Text style={estilos.descricao}>
                 Com sua permissão, usamos latitude e longitude somente para localizar uma estação de referência próxima.
@@ -271,7 +271,7 @@ export default function LocalizacaoScreen({ navigation }) {
                 <Icone name="shield-checkmark-outline" size={20} color="#115E59" />
               </View>
               <View style={estilos.textoVantagem}>
-                <Text style={estilos.tituloVantagemDestaque}>Não usamos seu endereço IP</Text>
+                <Text style={estilos.tituloVantagemDestaque}>Não Usamos seu Endereço IP</Text>
                 <Text style={estilos.descricaoVantagemDestaque}>O GPS é comparado neste aparelho. À API vai apenas a referência escolhida ao buscar a previsão.</Text>
               </View>
             </View>
@@ -282,7 +282,7 @@ export default function LocalizacaoScreen({ navigation }) {
                   <Icone name="radio-outline" size={20} color="#115E59" />
                 </View>
                 <View style={estilos.textoVantagem}>
-                  <Text style={estilos.tituloVantagem}>Referência regional</Text>
+                  <Text style={estilos.tituloVantagem}>Referência Regional</Text>
                   <Text style={estilos.descricaoVantagem}>A estação próxima serve como base para a consulta de previsão.</Text>
                 </View>
               </View>
@@ -291,7 +291,7 @@ export default function LocalizacaoScreen({ navigation }) {
                   <Icone name="sparkles-outline" size={20} color="#115E59" />
                 </View>
                 <View style={estilos.textoVantagem}>
-                  <Text style={estilos.tituloVantagem}>É uma estimativa</Text>
+                  <Text style={estilos.tituloVantagem}>É uma Estimativa</Text>
                   <Text style={estilos.descricaoVantagem}>O resultado não é uma medição direta da rede ou do aparelho do usuário.</Text>
                 </View>
               </View>
@@ -308,7 +308,7 @@ export default function LocalizacaoScreen({ navigation }) {
           <View style={estilos.acoes}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={solicitandoLocalizacao ? 'Buscando localização' : 'Permitir localização'}
+              accessibilityLabel={solicitandoLocalizacao ? 'Buscando localização' : 'Permitir Localização'}
               accessibilityState={{ disabled: solicitandoLocalizacao }}
               disabled={solicitandoLocalizacao}
               onPress={permitirLocalizacao}
@@ -321,7 +321,7 @@ export default function LocalizacaoScreen({ navigation }) {
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Escolher outra cidade"
+              accessibilityLabel="Escolher Outra Cidade"
               onPress={abrirSelecaoManual}
               style={({ pressed }) => [estilos.botaoCidade, pressed && estilos.botaoPressionado]}
             >
