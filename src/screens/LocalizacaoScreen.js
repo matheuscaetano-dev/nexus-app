@@ -316,7 +316,7 @@ export default function LocalizacaoScreen({ navigation }) {
             >
               <Icone name="locate-outline" size={18} color={cores.sobrePrimaria} />
               <Text style={estilos.textoBotaoPrimario}>
-                {solicitandoLocalizacao ? 'Buscando localização…' : 'Permitir localização'}
+                {solicitandoLocalizacao ? 'Buscando localização…' : 'Permitir Localização'}
               </Text>
             </Pressable>
             <Pressable
@@ -326,7 +326,7 @@ export default function LocalizacaoScreen({ navigation }) {
               style={({ pressed }) => [estilos.botaoCidade, pressed && estilos.botaoPressionado]}
             >
               <Icone name="map-outline" size={18} color={cores.primaria} />
-              <Text style={estilos.textoBotaoSecundario}>Escolher outra cidade</Text>
+              <Text style={estilos.textoBotaoSecundario}>Escolher Outra Cidade</Text>
             </Pressable>
           </View>
 
