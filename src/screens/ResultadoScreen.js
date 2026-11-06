@@ -21,7 +21,7 @@ export default function ResultadoScreen({ navigation, route }) {
         <View style={estilos.linhaTopoDetalhe}>
           <View>
             <Text style={estilos.labelModelo}>{atividade || 'Previsão atual'}</Text>
-            <Text style={estilos.tituloCartao}>Conexão {previsao?.nivel.rotulo.toLowerCase() || '—'}</Text>
+            <Text style={estilos.tituloCartao}>Conexão {previsao?.nivel.rotulo || '—'}</Text>
           </View>
           {previsao && <BadgeNivel corId={previsao.nivel.id} rotulo={previsao.nivel.rotulo} simbolo={previsao.nivel.simbolo} iconeEsquerda />}
         </View>

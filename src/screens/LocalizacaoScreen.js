@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Linking, Platform, StyleSheet } from 'react-native';
 import * as Location from 'expo-location';
 import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
@@ -12,43 +12,13 @@ import { EstadoCarregando, EstadoErro } from '../components/Estados';
 import { useConexao } from '../context/ConexaoContext';
 import { cores, espaco, raio } from '../theme';
 import Icone from '../components/Icone';
-
-const distanciaEmKm = (origem, destino) => {
-  const radianos = (graus) => (graus * Math.PI) / 180;
-  const diferencaLatitude = radianos(destino.latitude - origem.latitude);
-  const diferencaLongitude = radianos(destino.longitude - origem.longitude);
-  const a = Math.sin(diferencaLatitude / 2) ** 2
-    + Math.cos(radianos(origem.latitude))
-      * Math.cos(radianos(destino.latitude))
-      * Math.sin(diferencaLongitude / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-};
-
-const cidadesReferenciaBR = [
-  { nome: 'São Paulo', uf: 'SP', latitude: -23.5505, longitude: -46.6333 },
-  { nome: 'Rio de Janeiro', uf: 'RJ', latitude: -22.9068, longitude: -43.1729 },
-  { nome: 'Belo Horizonte', uf: 'MG', latitude: -19.9167, longitude: -43.9345 },
-  { nome: 'Brasília', uf: 'DF', latitude: -15.7975, longitude: -47.8919 },
-  { nome: 'Salvador', uf: 'BA', latitude: -12.9714, longitude: -38.5014 },
-  { nome: 'Recife', uf: 'PE', latitude: -8.0476, longitude: -34.8770 },
-  { nome: 'Fortaleza', uf: 'CE', latitude: -3.7172, longitude: -38.5434 },
-  { nome: 'Curitiba', uf: 'PR', latitude: -25.4284, longitude: -49.2733 },
-  { nome: 'Porto Alegre', uf: 'RS', latitude: -30.0346, longitude: -51.2177 },
-  { nome: 'Manaus', uf: 'AM', latitude: -3.1190, longitude: -60.0217 },
-];
-
-const obterCidadeReferencia = (probe) => {
-  if (probe?.countryCode !== 'BR') return null;
-  const maisProxima = cidadesReferenciaBR
-    .map((cidade) => ({ cidade, distancia: distanciaEmKm(probe.location, cidade) }))
-    .sort((a, b) => a.distancia - b.distancia)[0];
-  return maisProxima?.distancia <= 50 ? maisProxima.cidade : null;
-};
+import { distanciaEmKm, obterCidadeReferencia } from '../utils/Referencias';
 
 const encontrarProbeMaisProxima = (coordenadas, probes) => probes
   .filter((probe) => Number.isFinite(probe?.location?.latitude) && Number.isFinite(probe?.location?.longitude))
   .map((probe) => ({ probe, distancia: distanciaEmKm(coordenadas, probe.location) }))
   .sort((a, b) => a.distancia - b.distancia)[0]?.probe ?? null;
+
 const formatarCoordenada = (valor) => Number(valor).toLocaleString('pt-BR', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 4,
@@ -60,6 +30,7 @@ export default function LocalizacaoScreen({ navigation }) {
   const [probeSelecionada, setProbeSelecionada] = useState(local?.probeId ?? null);
   const [modoManual, setModoManual] = useState(false);
   const [solicitandoLocalizacao, setSolicitandoLocalizacao] = useState(false);
+  const [avisoLocalizacao, setAvisoLocalizacao] = useState(null);
 
   useEffect(() => {
     if (modoManual && probeSelecionada == null && locais.length) {
@@ -78,30 +49,29 @@ export default function LocalizacaoScreen({ navigation }) {
   async function permitirLocalizacao() {
     if (solicitandoLocalizacao) return;
     setSolicitandoLocalizacao(true);
+    setAvisoLocalizacao(null);
 
     try {
-      const permissao = await Location.requestForegroundPermissionsAsync();
-      if (permissao.status !== 'granted') {
-        Alert.alert(
-          'Localização não autorizada',
-          'A permissão não foi concedida. Você pode escolher uma referência manualmente.',
-          [
-            { text: 'Agora não', style: 'cancel' },
-            { text: 'Escolher outra cidade', onPress: abrirSelecaoManual },
-          ],
-        );
+      if (!(await Location.hasServicesEnabledAsync())) {
+        setAvisoLocalizacao({
+          tipo: 'servicos',
+          titulo: 'Localização desativada',
+          descricao: Platform.OS === 'ios'
+            ? 'No iPhone, ative Serviços de Localização em Ajustes > Privacidade e Segurança. O botão abre os ajustes do Nexus; depois, volte e toque em Permitir Localização.'
+            : 'Ative a localização do aparelho para encontrar a referência regional mais próxima.',
+        });
         return;
       }
 
-      if (!(await Location.hasServicesEnabledAsync())) {
-        Alert.alert(
-          'Localização desativada',
-          'Ative a localização do aparelho ou escolha uma referência manualmente.',
-          [
-            { text: 'Agora não', style: 'cancel' },
-            { text: 'Escolher outra cidade', onPress: abrirSelecaoManual },
-          ],
-        );
+      const permissao = await Location.requestForegroundPermissionsAsync();
+      if (permissao.status !== 'granted') {
+        setAvisoLocalizacao({
+          tipo: permissao.canAskAgain ? 'permissao' : 'permissaoBloqueada',
+          titulo: 'Acesso à localização necessário',
+          descricao: permissao.canAskAgain
+            ? 'Permita o acesso enquanto usa o app para selecionar a probe regional mais próxima.'
+            : 'O acesso foi bloqueado. Abra os ajustes do Nexus e permita a localização durante o uso.',
+        });
         return;
       }
 
@@ -122,27 +92,68 @@ export default function LocalizacaoScreen({ navigation }) {
 
       const probeMaisProxima = encontrarProbeMaisProxima({ latitude, longitude }, locais);
       if (!probeMaisProxima) {
-        Alert.alert(
-          'Referência indisponível',
-          'Não há referências válidas para comparar. Você pode escolher uma manualmente.',
-          [{ text: 'Escolher outra cidade', onPress: abrirSelecaoManual }],
-        );
+        setAvisoLocalizacao({
+          tipo: 'erro',
+          titulo: 'Referência indisponível',
+          descricao: 'Não há referências válidas para comparar. Você pode escolher uma cidade manualmente.',
+        });
         return;
       }
 
       setLocal(probeMaisProxima);
       continuarParaInicio();
     } catch {
-      Alert.alert(
-        'Não foi possível obter sua localização',
-        'Confira se a localização está ativada no dispositivo ou escolha uma região manualmente.',
-        [
-          { text: 'Tentar novamente', onPress: permitirLocalizacao },
-          { text: 'Escolher outra cidade', onPress: abrirSelecaoManual },
-        ],
-      );
+      setAvisoLocalizacao({
+        tipo: 'erro',
+        titulo: 'Não foi possível obter a localização',
+        descricao: 'Confira os ajustes do aparelho ou escolha uma cidade manualmente.',
+      });
     } finally {
       setSolicitandoLocalizacao(false);
+    }
+  }
+
+  async function agirAvisoLocalizacao() {
+    if (!avisoLocalizacao) return;
+
+    if (avisoLocalizacao.tipo === 'permissao' || avisoLocalizacao.tipo === 'erro') {
+      await permitirLocalizacao();
+      return;
+    }
+
+    if (avisoLocalizacao.tipo === 'permissaoBloqueada' || (avisoLocalizacao.tipo === 'servicos' && Platform.OS === 'ios')) {
+      try {
+        await Linking.openSettings();
+      } catch {
+        setAvisoLocalizacao((atual) => atual && { ...atual, descricao: `${atual.descricao} Abra os Ajustes do aparelho manualmente.` });
+      }
+      return;
+    }
+
+    if (avisoLocalizacao.tipo === 'servicos' && Platform.OS === 'android') {
+      setAvisoLocalizacao(null);
+      try {
+        try {
+          await Location.enableNetworkProviderAsync();
+        } catch {
+          await Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS');
+        }
+        if (await Location.hasServicesEnabledAsync()) {
+          await permitirLocalizacao();
+        } else {
+          setAvisoLocalizacao({
+            tipo: 'servicos',
+            titulo: 'Localização ainda desativada',
+            descricao: 'Ative a localização nas configurações do aparelho e tente novamente.',
+          });
+        }
+      } catch {
+        setAvisoLocalizacao({
+          tipo: 'servicos',
+          titulo: 'Ative a localização do aparelho',
+          descricao: 'Não foi possível abrir a solicitação automática. Ative a localização nas configurações do Android e volte ao Nexus.',
+        });
+      }
     }
   }
 
@@ -152,12 +163,13 @@ export default function LocalizacaoScreen({ navigation }) {
     setLocal(escolhida);
     continuarParaInicio();
   }
+
   if (erroFontes) throw erroFontes;
   if (!fontesCarregadas) return null;
 
   if (modoManual) {
     return (
-      <SafeAreaView style={estilos.safe} edges={['top', 'right', 'bottom', 'left']}>
+      <SafeAreaView style={estilos.safe} edges={['right', 'bottom', 'left']}>
         <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudoManual} showsVerticalScrollIndicator={false}>
           <Pressable
             accessibilityRole="button"
@@ -218,7 +230,7 @@ export default function LocalizacaoScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={estilos.safe} edges={['top', 'right', 'bottom', 'left']}>
+    <SafeAreaView style={estilos.safe} edges={['right', 'bottom', 'left']}>
       <ScrollView style={estilos.tela} contentContainerStyle={estilos.conteudo} showsVerticalScrollIndicator={false}>
         <View style={estilos.conteudoPrincipal}>
           <View style={estilos.cabecalho}>
@@ -305,6 +317,27 @@ export default function LocalizacaoScreen({ navigation }) {
             <View style={estilos.pontoAtivo} />
           </View>
 
+          {avisoLocalizacao ? (
+            <View style={estilos.avisoLocalizacao} accessibilityLiveRegion="polite">
+              <View style={estilos.conteudoAvisoLocalizacao}>
+                <Icone name="location-outline" size={20} color={cores.avisoTexto} />
+                <View style={estilos.textosAvisoLocalizacao}>
+                  <Text style={estilos.tituloAvisoLocalizacao}>{avisoLocalizacao.titulo}</Text>
+                  <Text style={estilos.descricaoAvisoLocalizacao}>{avisoLocalizacao.descricao}</Text>
+                </View>
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={avisoLocalizacao.tipo === 'servicos' ? Platform.OS === 'android' ? 'Ativar localização do aparelho' : 'Abrir ajustes de localização' : avisoLocalizacao.tipo === 'permissaoBloqueada' ? 'Abrir ajustes do Nexus' : 'Tentar novamente'}
+                onPress={agirAvisoLocalizacao}
+                style={({ pressed }) => [estilos.botaoAvisoLocalizacao, pressed && estilos.botaoPressionado]}
+              >
+                <Icone name={avisoLocalizacao.tipo === 'servicos' && Platform.OS === 'android' ? 'locate-outline' : 'settings-outline'} size={17} color={cores.sobrePrimaria} />
+                <Text style={estilos.textoBotaoAvisoLocalizacao}>{avisoLocalizacao.tipo === 'servicos' ? Platform.OS === 'android' ? 'Ativar Localização' : 'Abrir Ajustes' : avisoLocalizacao.tipo === 'permissaoBloqueada' ? 'Abrir Ajustes' : 'Tentar Novamente'}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
           <View style={estilos.acoes}>
             <Pressable
               accessibilityRole="button"
@@ -352,6 +385,13 @@ const estilos = StyleSheet.create({
   },
   conteudoPrincipal: { alignSelf: 'stretch' },
   rodape: { alignSelf: 'stretch', alignItems: 'center', gap: 10 },
+  avisoLocalizacao: { alignSelf: 'stretch', padding: 12, borderRadius: 14, backgroundColor: '#FFF5DB', borderWidth: 1, borderColor: '#E8C66B', gap: 10 },
+  conteudoAvisoLocalizacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  textosAvisoLocalizacao: { flex: 1, gap: 3 },
+  tituloAvisoLocalizacao: { fontSize: 14, fontWeight: '800', color: '#49380A' },
+  descricaoAvisoLocalizacao: { fontSize: 12, lineHeight: 17, color: '#49380A' },
+  botaoAvisoLocalizacao: { alignSelf: 'stretch', minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingHorizontal: 12, borderRadius: 10, backgroundColor: cores.primaria },
+  textoBotaoAvisoLocalizacao: { color: cores.sobrePrimaria, fontSize: 13, fontWeight: '800' },
   conteudoManual: { padding: espaco.xl, paddingTop: espaco.lg, paddingBottom: espaco.xxl * 2, flexGrow: 1 },
   cabecalho: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   titulosCabecalho: { flex: 1 },

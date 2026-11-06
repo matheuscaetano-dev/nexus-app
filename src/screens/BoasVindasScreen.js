@@ -64,7 +64,7 @@ export default function BoasVindasScreen({ navigation }) {
 
           <View style={estilos.rodapeConteudo}>
             <Pressable
-              onPress={() => navigation.replace('EscolherModelo')}
+              onPress={() => navigation.navigate('EscolherModelo')}
               accessibilityRole="button"
               accessibilityLabel="Começar a configurar o aplicativo"
               style={({ pressed }) => [estilos.botao, pressed && estilos.botaoPressionado]}

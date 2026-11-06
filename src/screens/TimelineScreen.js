@@ -38,11 +38,21 @@ export default function TimelineScreen() {
       <Text style={estilos.tituloGigante}>Linha do Tempo da Conexão</Text>
 
       <View style={estilos.linhaResumo}>
-        <View>
-          <Text style={estilos.labelModelo}>CONSULTA ATUAL</Text>
-          <Text style={estilos.valorModelo}>{inicio.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' }).toLocaleUpperCase('pt-BR')} • {periodoRotulo.toLocaleUpperCase('pt-BR')}</Text>
+        <Text style={estilos.labelModelo}>CONSULTA ATUAL</Text>
+        <Text style={estilos.valorModelo}>{inicio.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' }).toLocaleUpperCase('pt-BR')} • {periodoRotulo.toLocaleUpperCase('pt-BR')}</Text>
+      </View>
+      <View
+        style={estilos.modeloAtual}
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel={`Modelo em uso: ${modelo?.name || 'Escolha um modelo'}${modelo?.version ? `, versão ${modelo.version}` : ''}`}
+      >
+        <Icone name="analytics-outline" size={20} color={cores.primaria} />
+        <View style={estilos.modeloAtualTexto}>
+          <Text style={estilos.rotuloModeloAtual}>MODELO EM USO</Text>
+          <Text style={estilos.nomeModeloAtual} numberOfLines={2} ellipsizeMode="tail">{modelo?.name || 'Escolha um modelo'}</Text>
         </View>
-        <Text style={estilos.versaoBadge}>{modelo?.name || 'Escolha um modelo'}</Text>
+        {modelo?.version ? <Text style={estilos.versaoBadge}>v{modelo.version}</Text> : null}
       </View>
       <Text style={estilos.textoDescritivo}>Previsões do modelo para a probe de referência selecionada. Os horários são exibidos no fuso local do aparelho.</Text>
 
@@ -88,9 +98,13 @@ const estilos = StyleSheet.create({
   conteudo: { padding: espaco.xl, paddingTop: espaco.xl + espaco.sm, paddingBottom: espaco.xxl * 2 },
   overline: { fontSize: 12, fontWeight: '800', color: cores.primaria, letterSpacing: 0.5, marginBottom: 4 },
   tituloGigante: { fontSize: 32, fontWeight: '800', color: cores.texto, lineHeight: 36, marginBottom: espaco.md },
-  linhaResumo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
+  linhaResumo: { marginBottom: 8 },
+  modeloAtual: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm, padding: espaco.md, marginBottom: espaco.md, borderRadius: raio.lg, backgroundColor: cores.fundoSecundario, borderWidth: 1, borderColor: cores.divisor },
+  modeloAtualTexto: { flex: 1, minWidth: 0 },
+  rotuloModeloAtual: { fontSize: 10, fontWeight: '800', color: cores.textoSecundario, letterSpacing: 0.5, marginBottom: 2 },
+  nomeModeloAtual: { fontSize: 14, lineHeight: 18, fontWeight: '700', color: cores.texto },
   labelModelo: { fontSize: 11, fontWeight: '800', color: cores.primaria, letterSpacing: 0.5, marginBottom: 2 },
-  valorModelo: { fontSize: 18, fontWeight: '800', color: cores.texto },
+  valorModelo: { fontSize: 18, lineHeight: 24, fontWeight: '800', color: cores.texto },
   versaoBadge: { fontSize: 11, fontWeight: '800', color: cores.primaria, backgroundColor: '#D8EDE9', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   textoDescritivo: { fontSize: 14, color: cores.textoSecundario, lineHeight: 20, marginBottom: espaco.xl },
   secaoFiltros: { backgroundColor: cores.superficie, padding: espaco.lg, borderRadius: raio.xl, borderWidth: 1, borderColor: cores.divisor, marginBottom: espaco.xl },

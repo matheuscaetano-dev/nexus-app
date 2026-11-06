@@ -7,6 +7,7 @@ import { EstadoCarregando, EstadoErro } from '../components/Estados';
 import useAsync from '../hooks/useAsync';
 import { obterPrevisao, obterProximasHoras } from '../services/previsaoService';
 import { formatarMs, formatarPercentual, inicioDaHora } from '../utils/Formatadores';
+import { obterNomeLocalReferencia } from '../utils/Referencias';
 import { useConexao } from '../context/ConexaoContext';
 import MarcaNexus from '../components/MarcaNexus';
 import { cores, espaco, raio } from '../theme';
@@ -14,6 +15,7 @@ import Icone from '../components/Icone';
 
 export default function PrevisaoScreen({ navigation }) {
   const { modelo, local } = useConexao();
+  const nomeLocalReferencia = obterNomeLocalReferencia(local);
   const base = useMemo(() => inicioDaHora(new Date()), []);
   const atual = useAsync(() => modelo && local ? obterPrevisao(base, local, modelo) : Promise.resolve(null), [base.getTime(), modelo?.id, local?.probeId]);
   const proximas = useAsync(() => modelo && local ? obterProximasHoras(base, [0, 1, 2, 3, 4], local, modelo) : Promise.resolve([]), [base.getTime(), modelo?.id, local?.probeId]);
@@ -79,14 +81,14 @@ export default function PrevisaoScreen({ navigation }) {
       <Pressable
         onPress={() => navigation.navigate('Localizacao')}
         accessibilityRole="button"
-        accessibilityLabel={'Alterar referência da probe ' + (local?.probeId ?? 'não selecionada')}
+        accessibilityLabel={`Alterar referência: ${nomeLocalReferencia}, probe ${local?.probeId ?? 'não selecionada'}`}
         accessibilityHint="Abre as opções de referência regional."
         style={estilos.avisoLocalizacao}
       >
         <Icone name="location-outline" size={21} color={cores.primaria} style={estilos.iconeAviso} />
         <View style={{ flex: 1 }}>
-          <Text style={estilos.tituloAvisoLocalizacao}>Referência atual: {'probe\u00A0' + (local?.probeId ?? 'não selecionada')}</Text>
-          <Text style={estilos.textoAvisoLocalizacao}>Toque para escolher outra referência regional.</Text>
+          <Text style={estilos.tituloAvisoLocalizacao}>Referência atual: {nomeLocalReferencia}</Text>
+          <Text style={estilos.textoAvisoLocalizacao}>Probe {local?.probeId ?? 'não selecionada'} • Toque para escolher outra referência regional.</Text>
         </View>
         <View style={estilos.acaoAvisoLocalizacao}>
           <Text style={estilos.textoAcaoAvisoLocalizacao}>Alterar</Text>
